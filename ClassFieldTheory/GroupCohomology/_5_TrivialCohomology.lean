@@ -49,8 +49,9 @@ lemma Rep.trivialHomology_of_iso {M N : Rep R G} (f : M ≅ N) [N.TrivialHomolog
     M.TrivialHomology := by
   constructor
   intro S _ _ φ inj n
-  have : (groupHomology.functor n.succ).obj (M ↓ φ) ≅ (groupHomology.functor n.succ).obj (N ↓ φ)
-  · apply (groupHomology.functor n.succ).mapIso
+  have : (groupHomology.functor R S n.succ).obj (M ↓ φ) ≅
+      (groupHomology.functor R S n.succ).obj (N ↓ φ)
+  · apply (groupHomology.functor R S n.succ).mapIso
     exact (res φ).mapIso f
   apply IsZero.of_iso _ this
   apply TrivialHomology.zero inj
