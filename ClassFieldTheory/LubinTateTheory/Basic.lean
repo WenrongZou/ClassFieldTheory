@@ -6,8 +6,10 @@ import Mathlib.Topology.UniformSpace.Cauchy
 import Mathlib.Topology.UniformSpace.Defs
 import Mathlib.NumberTheory.Padics.ProperSpace
 import Mathlib.Topology.Algebra.Valued.LocallyCompact
+import Mathlib.RingTheory.PowerSeries.Substitution
+import Mathlib.RingTheory.PowerSeries.Trunc
 
-open ValuativeRel
+open ValuativeRel PowerSeries
 
 universe u
 
@@ -40,3 +42,15 @@ instance : ProperSpace K :=
 
 instance : IsDiscreteValuationRing 𝒪[K] :=
   (Valued.integer.properSpace_iff_completeSpace_and_isDiscreteValuationRing_integer_and_finite_residueField.mp inferInstance).2.1
+
+
+variable (π : 𝒪[K])
+
+include K in
+def residue_size  : ℕ := sorry
+
+structure F  where
+toFun : PowerSeries 𝒪[K]
+trunc_degree_two : PowerSeries.trunc 2 toFun = (Polynomial.C π) * Polynomial.X
+mod_pi : toFun.coeff _ residue_size ≡ 1 [SMOD (IsLocalRing.maximalIdeal (𝒪[K]))]
+  ∧ ∀ n, n ≠ residue_size →  toFun.coeff _ n ≡ 0 [SMOD (IsLocalRing.maximalIdeal (𝒪[K]))]
