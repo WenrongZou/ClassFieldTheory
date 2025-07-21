@@ -46,12 +46,10 @@ instance : IsDiscreteValuationRing 𝒪[K] :=
 
 variable (π : 𝒪[K])
 
-instance : Fintype (𝒪[K] ⧸ (IsLocalRing.maximalIdeal (𝒪[K]))) := by
-
-  sorry
+instance : Finite 𝓀[K] := (Valued.integer.properSpace_iff_completeSpace_and_isDiscreteValuationRing_integer_and_finite_residueField.mp inferInstance).2.2
 
 include K in
-def residue_size : ℕ := Fintype.card (𝒪[K] ⧸ (IsLocalRing.maximalIdeal (𝒪[K])))
+noncomputable def residue_size : ℕ := @Fintype.card 𝓀[K] (Fintype.ofFinite (IsLocalRing.ResidueField 𝒪[K]))
 
 
 structure LubinTateF  where
