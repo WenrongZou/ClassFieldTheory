@@ -155,8 +155,8 @@ variable (R) in
 structure FormalGroup  where
   toFun : MvPowerSeries (Fin 2) R
   zero_coeff : constantCoeff (Fin 2) R toFun = 0
-  lin_coeff_X : subst subst_X₀ toFun = X₀ (R := R)
-  lin_coeff_Y : subst subst_X₁ toFun = X₁ (R := R)
+  lin_coeff_X : coeff R (Finsupp.single 0 1) toFun = 1
+  lin_coeff_Y : coeff R (Finsupp.single 1 1) toFun = 1
   assoc : subst (subst_fir toFun) toFun = subst (subst_sec toFun) toFun
   --  Associativity of the Formal Group : `F (F (X, Y), Z) = F (X, F (Y, Z))`.
 
