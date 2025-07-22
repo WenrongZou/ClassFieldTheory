@@ -10,7 +10,7 @@ import Mathlib.RingTheory.PowerSeries.Substitution
 import Mathlib.RingTheory.PowerSeries.Trunc
 import ClassFieldTheory.LubinTateTheory.FormalGroupLaws.Basic
 
-open ValuativeRel MvPowerSeries
+open ValuativeRel MvPowerSeries Classical
 
 universe u
 
@@ -89,7 +89,106 @@ theorem constructive_lemma (n : ℕ) {ϕ₁ : MvPowerSeries (Fin n) 𝒪[K]}
   `F_f` with coefficient in `𝒪[K]` admitting `f` as an endomorphism.-/
 theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
   ∃! (F_f : FormalGroup (𝒪[K])), ∃ (α : FormalGroupHom F_f F_f),
-  α.toFun = f.toFun := by sorry
+  α.toFun = f.toFun := by
+  let ϕ₁ : MvPowerSeries (Fin 2) (𝒪[K]) :=
+    X (0 : Fin 2) + X (1 : Fin 2)
+  let a : Fin 2 → 𝒪[K] := fun _ => 1
+  have phi_eq : ϕ₁ = ∑ (i : Fin 2), (C (Fin 2) 𝒪[K] (a i)) * X i := by
+    simp [ϕ₁,a]
+  let F_f : FormalGroup (𝒪[K]) := {
+    toFun := choose (constructive_lemma K π 2 phi_eq f f)
+    zero_coeff := by
+      obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 2 phi_eq f f)
+      obtain ⟨h₁, h_hom⟩ := h₁
+      calc
+        _ = (constantCoeff (Fin 2) ↥𝒪[K]) (↑((trunc_deg (↥𝒪[K]) 2)
+          (choose (constructive_lemma K π 2 phi_eq f f)))) := by
+          unfold trunc_deg deg_map
+          simp [←coeff_zero_eq_constantCoeff, coeff_trunc]
+          intro h₃
+          have contra : 0 < Finsupp.equivFunOnFinite.symm fun (x : Fin 2) ↦ 2 := by
+            have aux : 0 < fun (x : Fin 2) ↦ 2 := by
+              exact Nat.ofNat_pos'
+
+            exact aux
+          contradiction
+        _ = 0 := by
+          rw [h₁]
+          simp [ϕ₁]
+    lin_coeff_X := by
+      -- maybe we could delete this two part according to milne remark 2.4
+
+      sorry
+    lin_coeff_Y := sorry
+    assoc := by
+      let G₁ := subst (subst_fir (choose (constructive_lemma K π 2 phi_eq f f)))
+        (choose (constructive_lemma K π 2 phi_eq f f))
+      let G₂ := subst (subst_sec (choose (constructive_lemma K π 2 phi_eq f f)))
+        (choose (constructive_lemma K π 2 phi_eq f f))
+      let b : Fin 3 → 𝒪[K] := fun x => 1
+      let φ : MvPowerSeries (Fin 3) 𝒪[K] := X (0 : Fin 3) + X 1 + X 2
+      have phi_eq' : φ = ∑ i, (C (Fin 3) ↥𝒪[K]) (b i) * X i := by
+        unfold φ b
+        simp [(Fin.sum_univ_three X)]
+      obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 3 phi_eq' f f)
+      obtain G₀ := choose (constructive_lemma K π 3 phi_eq' f f)
+      have aux₁ : (fun ϕ ↦ ↑((trunc_deg (↥𝒪[K]) 2) ϕ) = φ ∧
+        PowerSeries.subst ϕ f.toFun = subst (subst_aux f.toFun) ϕ) G₁ := by
+        simp
+        constructor
+        ·
+
+          sorry
+        · sorry
+
+      have aux₂ : (fun ϕ ↦ ↑((trunc_deg (↥𝒪[K]) 2) ϕ) = φ ∧
+        PowerSeries.subst ϕ f.toFun = subst (subst_aux f.toFun) ϕ) G₂ := by
+        simp
+        constructor
+        · sorry
+        · sorry
+
+      obtain eq_aux₁ := h₂ _ aux₁
+      obtain eq_aux₂ := h₂ _ aux₂
+      unfold G₁ at eq_aux₁
+      unfold G₂ at eq_aux₂
+      rw [eq_aux₁, ←eq_aux₂]
+  }
+  let Hom_f : FormalGroupHom F_f F_f := {
+    toFun := f.toFun
+    zero_constantCoeff := by
+      obtain h₁ := f.trunc_degree_two
+      have coeff_aux₁ : (PowerSeries.constantCoeff ↥𝒪[K])
+        (PowerSeries.trunc 2 f.toFun) = Polynomial.constantCoeff
+        (Polynomial.C π * Polynomial.X) := by
+        simp [h₁]
+      calc
+        _ = (PowerSeries.constantCoeff ↥𝒪[K]) (PowerSeries.trunc 2 f.toFun) := by
+          simp [PowerSeries.coeff_trunc]
+        _ = 0 := by
+          simp [coeff_aux₁]
+    hom := by
+      obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 2 phi_eq f f)
+      obtain ⟨h₁, h_hom⟩ := h₁
+      have map_eq_aux : subst_aux f.toFun = subst_hom f.toFun := by
+        ext x t
+        congr
+        unfold subst_aux subst_hom
+        by_cases hx0 : x = 0
+        · simp [hx0]
+        · simp [show x = 1 by omega]
+      rw [←map_eq_aux, h_hom]
+  }
+  refine existsUnique_of_exists_of_unique ?_ ?_
+  · use F_f, Hom_f
+  ·
+    obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 2 phi_eq f f)
+    obtain ⟨h₁, h_hom⟩ := h₁
+
+    sorry
+
+
+
 
 def LubinTateFormalGroup (f : LubinTateF K π) :=
   Classical.choose (existence_of_LubinTateFormalGroup K π f)

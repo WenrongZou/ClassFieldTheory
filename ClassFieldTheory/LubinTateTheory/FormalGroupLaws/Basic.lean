@@ -141,11 +141,11 @@ abbrev subst_symm : Fin 2 → MvPowerSeries (Fin 2) R
   | ⟨0, _⟩ => X₁
   | ⟨1, _⟩ => X₀
 
-abbrev subst_X : Fin 2 → MvPowerSeries (Fin 2) R
+abbrev subst_X₀ : Fin 2 → MvPowerSeries (Fin 2) R
   | ⟨0, _⟩ => X₀
   | ⟨1, _⟩ => 0
 
-abbrev subst_Y : Fin 2 → MvPowerSeries (Fin 2) R
+abbrev subst_X₁ : Fin 2 → MvPowerSeries (Fin 2) R
   | ⟨0, _⟩ => 0
   | ⟨1, _⟩ => X₁
 
@@ -155,8 +155,8 @@ variable (R) in
 structure FormalGroup  where
   toFun : MvPowerSeries (Fin 2) R
   zero_coeff : constantCoeff (Fin 2) R toFun = 0
-  lin_coeff_X : subst subst_X toFun = X₀ (R := R)
-  lin_coeff_Y : subst subst_Y toFun = X₁ (R := R)
+  lin_coeff_X : subst subst_X₀ toFun = X₀ (R := R)
+  lin_coeff_Y : subst subst_X₁ toFun = X₁ (R := R)
   assoc : subst (subst_fir toFun) toFun = subst (subst_sec toFun) toFun
   --  Associativity of the Formal Group : `F (F (X, Y), Z) = F (X, F (Y, Z))`.
 
