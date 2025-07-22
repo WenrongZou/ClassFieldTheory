@@ -54,21 +54,22 @@ noncomputable def residue_size : ℕ := @Fintype.card 𝓀[K] (Fintype.ofFinite 
 
 
 structure LubinTateF  where
-toFun : PowerSeries 𝒪[K]
-trunc_degree_two : PowerSeries.trunc 2 toFun = (Polynomial.C π) * Polynomial.X
-mod_pi : toFun.coeff (𝒪[K]) (residue_size K) ≡ 1 [SMOD (IsLocalRing.maximalIdeal (𝒪[K]))]
-  ∧ ∀ n, n ≠ (residue_size K) →  toFun.coeff _ n ≡ 0 [SMOD (IsLocalRing.maximalIdeal (𝒪[K]))]
+  toFun : PowerSeries 𝒪[K]
+  trunc_degree_two : PowerSeries.trunc 2 toFun = (Polynomial.C π) * Polynomial.X
+  mod_pi :
+    toFun.coeff (𝒪[K]) (residue_size K) ≡ 1 [SMOD (IsLocalRing.maximalIdeal (𝒪[K]))]
+      ∧ ∀ n ≠ (residue_size K), toFun.coeff _ n ≡ 0 [SMOD (IsLocalRing.maximalIdeal (𝒪[K]))]
 
 noncomputable section
 
 variable {σ : Type*} [DecidableEq σ] [Fintype σ] {R : Type*} [CommRing R]
 
 /--
-Given a power series p(X) ∈ R⟦X⟧, we may view it as a multivariate power series
-p(X_i) ∈ R⟦X_1, ..., X_n⟧.
+Given a power series p(X) ∈ R⟦X⟧ and an index i, we may view it as a
+multivariate power series p(X_i) ∈ R⟦X_1, ..., X_n⟧.
 -/
-abbrev subst_aux (f : PowerSeries R) : σ → MvPowerSeries σ R :=
-  (fun i => PowerSeries.subst (X i) f)
+abbrev PowerSeries.toMvPowerSeries (f : PowerSeries R) (i : σ) : MvPowerSeries σ R :=
+  PowerSeries.subst (MvPowerSeries.X i) f
 
 /-- The part of a multivariate power series with total degree n.
 
@@ -77,6 +78,7 @@ to the naturals, then `truncTotalDeg R n p` is the multivariable power series ob
 by keeping only the monomials $c\prod_i X_i^{a_i}$ where `∑ a_i = n`.
 
 TODO: FIX NAME
+TODO: Remove [Fintype σ] typeclass requirement
 -/
 def MvPowerSeries.truncTotalDegEq (n : ℕ) (p : MvPowerSeries σ R) : MvPolynomial σ R :=
   ∑ m ∈ Finset.finsuppAntidiag Finset.univ n, MvPolynomial.monomial m (coeff R m p)
@@ -99,7 +101,7 @@ theorem coeff_truncTotalDeg (n : ℕ) (m : σ →₀ ℕ) (φ : MvPowerSeries σ
   simp_rw [truncTotalDeg, MvPolynomial.coeff_sum, coeff_truncTotalDegEq,
     Finset.sum_ite_eq, Finset.mem_range]
 
-variable (R) in
+variable {R} in
 /--
 `MvPowerSeries.truncTotalDeg` as a monoid homomorphism.
 -/
@@ -114,14 +116,37 @@ def MvPowerSeries.truncTotalDegHom (n : ℕ) : MvPowerSeries σ R →+ MvPolynom
     rw [coeff_truncTotalDeg, coeff_truncTotalDeg, coeff_truncTotalDeg]
     split_ifs <;> simp
 
+section Prop_2_11
+
+namespace MvPowerSeries
+
 -- Proposition 2.11
-theorem constructive_lemma (n : ℕ) {ϕ₁ : MvPowerSeries (Fin n) 𝒪[K]}
-    {a : Fin n → 𝒪[K]}
-    (h_phi₁ : ϕ₁ = ∑ (i : Fin n), (C (Fin n) 𝒪[K] (a i)) * X i)
-    (f g : LubinTateF K π) :
-    ∃! (ϕ : MvPowerSeries (Fin n) 𝒪[K]), truncTotalDegHom (𝒪[K]) 2 ϕ = ϕ₁ ∧
-    PowerSeries.subst ϕ f.toFun = subst (subst_aux g.toFun) ϕ := by
+lemma constructive_lemma_ind_hyp
+    (n : ℕ) {ϕ₁ : MvPolynomial (Fin n) 𝒪[K]}
+    (h_ϕ₁ : ∀ i ∈ ϕ₁.support, Finset.univ.sum i = 1)
+    {a : Fin n → 𝒪[K]} (f g : LubinTateF K π) (r : ℕ) (hr : 0 < r) :
+    ∃! ϕr : MvPolynomial (Fin n) 𝒪[K],
+      ϕr.totalDegree < r
+        ∧ truncTotalDegHom 2 ϕr = ϕ₁
+          ∧ truncTotalDegHom r (PowerSeries.subst ϕr.toMvPowerSeries f.toFun)
+            = truncTotalDegHom r (subst g.toFun.toMvPowerSeries ϕr.toMvPowerSeries) := by
+  induction r, hr using Nat.le_induction with
+  | base => sorry
+  | succ n hmn ih => sorry
+
+-- Proposition 2.11
+theorem constructive_lemma
+    (n : ℕ) {ϕ₁ : MvPolynomial (Fin n) 𝒪[K]}
+    (h_ϕ₁ : ∀ i ∈ ϕ₁.support, Finset.univ.sum i = 1)
+    {a : Fin n → 𝒪[K]} (f g : LubinTateF K π) :
+    ∃! ϕ : MvPowerSeries (Fin n) 𝒪[K],
+      truncTotalDegHom 2 ϕ = ϕ₁
+        ∧ PowerSeries.subst ϕ f.toFun = subst g.toFun.toMvPowerSeries ϕ := by
   sorry
+
+end MvPowerSeries
+
+end Prop_2_11
 
 /-- For every `f ∈ LubinTateF K π`, there is a unique formal group law
   `F_f` with coefficient in `𝒪[K]` admitting `f` as an endomorphism.-/
