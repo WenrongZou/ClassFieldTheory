@@ -66,7 +66,12 @@ TODO: FIX NAME
 TODO: Remove [Fintype σ] typeclass requirement
 -/
 def MvPowerSeries.truncTotalDegEq (n : ℕ) (p : MvPowerSeries σ R) : MvPolynomial σ R :=
-  ∑ m ∈ Finset.finsuppAntidiag Finset.univ n, MvPolynomial.monomial m (coeff R m p)
+  ∑ m ∈ Finset.univ.finsuppAntidiag n, MvPolynomial.monomial m (coeff R m p)
+
+lemma MvPowerSeries.truncTotalDegEq_eq (n : ℕ) (p : MvPowerSeries σ R) :
+    p.truncTotalDegEq n
+      = ∑ m ∈ Finset.univ.finsuppAntidiag n, MvPolynomial.monomial m (coeff R m p) :=
+  rfl
 
 /-- The part of a multivariate power series with total degree at most n.
 
@@ -76,6 +81,10 @@ by keeping only the monomials $c\prod_i X_i^{a_i}$ where `∑ a_i ≤ n`.
 -/
 def MvPowerSeries.truncTotalDeg (n : ℕ) (p : MvPowerSeries σ R) : MvPolynomial σ R :=
   ∑ i ∈ Finset.range n, p.truncTotalDegEq i
+
+lemma MvPowerSeries.truncTotalDeg_eq (n : ℕ) (p : MvPowerSeries σ R) :
+    p.truncTotalDeg n = ∑ i ∈ Finset.range n, p.truncTotalDegEq i :=
+  rfl
 
 theorem coeff_truncTotalDegEq (n : ℕ) (m : σ →₀ ℕ) (φ : MvPowerSeries σ R) :
     (truncTotalDegEq n φ).coeff m = if Finset.univ.sum m = n then coeff R m φ else 0 := by
@@ -108,7 +117,9 @@ theorem truncTotalDeg_powerSeries (n : ℕ) (ϕ : PowerSeries R) :
     truncTotalDeg n ϕ = (MvPolynomial.pUnitAlgEquiv _).symm (ϕ.trunc n) := by
   rw [(MvPolynomial.pUnitAlgEquiv _).eq_symm_apply]
   ext d
-  simp [MvPolynomial.pUnitAlgEquiv_apply, PowerSeries.coeff_trunc]
+  simp_rw [PowerSeries.coeff_trunc, truncTotalDeg, map_sum, truncTotalDegEq,
+    map_sum, MvPolynomial.pUnitAlgEquiv_monomial, Polynomial.finset_sum_coeff,
+    Polynomial.coeff_monomial]
   sorry
 
 /--
@@ -237,7 +248,6 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
   α.toFun = f.toFun := by
   let ϕ₁ : MvPolynomial (Fin 2) (𝒪[K]) :=
     MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2)
-  let a : Fin 2 → 𝒪[K] := fun _ => 1
   have phi_supp : ∀ i ∈ ϕ₁.support, Finset.univ.sum ⇑i = 1 := by
     sorry
   have phi_eq :ϕ₁ = MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) := rfl
@@ -354,8 +364,8 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
 
           sorry
 
-      have aux₂ : (fun ϕ ↦ ↑((truncTotalDegHom (↥𝒪[K]) 2) ϕ) = φ ∧
-        PowerSeries.subst ϕ f.toFun = subst (subst_aux f.toFun) ϕ) G₂ := by
+      have aux₂ : (fun ϕ ↦ ↑((truncTotalDegHom 2) ϕ) = φ ∧
+        PowerSeries.subst ϕ f.toFun = subst f.toFun.toMvPowerSeries ϕ) G₂ := by
         simp
         constructor
         · sorry
@@ -383,10 +393,10 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
     hom := by
       obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 2 phi_eq f f)
       obtain ⟨h₁, h_hom⟩ := h₁
-      have map_eq_aux : subst_aux f.toFun = subst_hom f.toFun := by
+      have map_eq_aux : f.toFun.toMvPowerSeries = subst_hom f.toFun := by
         ext x t
         congr
-        unfold subst_aux subst_hom
+        unfold subst_hom
         by_cases hx0 : x = 0
         · simp [hx0]
         · simp [show x = 1 by omega]
