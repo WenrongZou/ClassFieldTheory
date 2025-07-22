@@ -124,7 +124,7 @@ namespace MvPowerSeries
 lemma constructive_lemma_ind_hyp
     (n : ℕ) {ϕ₁ : MvPolynomial (Fin n) 𝒪[K]}
     (h_ϕ₁ : ∀ i ∈ ϕ₁.support, Finset.univ.sum i = 1)
-    {a : Fin n → 𝒪[K]} (f g : LubinTateF K π) (r : ℕ) (hr : 0 < r) :
+    {a : Fin n → 𝒪[K]} (f g : LubinTateF K π) (r : ℕ) (hr : 2 ≤ r) :
     ∃! ϕr : MvPolynomial (Fin n) 𝒪[K],
       ϕr.totalDegree < r
         ∧ truncTotalDegHom 2 ϕr = ϕ₁
