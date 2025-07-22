@@ -61,44 +61,67 @@ mod_pi : toFun.coeff (𝒪[K]) (residue_size K) ≡ 1 [SMOD (IsLocalRing.maximal
 
 noncomputable section
 
-variable {σ : Type*} [DecidableEq σ] [Finite σ] {R : Type*} [CommRing R]
+variable {σ : Type*} [DecidableEq σ] [Fintype σ] {R : Type*} [CommRing R]
 
-
-abbrev deg_map (n : ℕ) : σ →₀ ℕ :=
-  Finsupp.equivFunOnFinite.invFun (fun _ => n)
-
+/--
+Given a power series p(X) ∈ R⟦X⟧, we may view it as a multivariate power series
+p(X_i) ∈ R⟦X_1, ..., X_n⟧.
+-/
 abbrev subst_aux (f : PowerSeries R) : σ → MvPowerSeries σ R :=
   (fun i => PowerSeries.subst (X i) f)
 
-def MvPowerSeries.truncTotalDegFun (n : ℕ) (φ : MvPowerSeries σ R) : MvPolynomial σ R :=
-  ∑ m ∈ (Finset.Iio (deg_map n)).filter (fun f => f.sum (λ _ x => x) < n), MvPolynomial.monomial m (coeff R m φ)
+/-- The part of a multivariate power series with total degree n.
 
-theorem coeff_truncTotalDegFun (n : ℕ) (m : σ →₀ ℕ) (φ : MvPowerSeries σ R) :
-    (truncTotalDegFun n φ).coeff m = if (m < (deg_map n) ∧ m.sum (λ _ x => x) < n)then coeff R m φ else 0 := by
-  classical
-  simp [truncTotalDegFun, MvPolynomial.coeff_sum]
+If `f : MvPowerSeries σ R` and `n : σ →₀ ℕ` is a (finitely-supported) function from `σ`
+to the naturals, then `truncTotalDeg R n p` is the multivariable power series obtained from `p`
+by keeping only the monomials $c\prod_i X_i^{a_i}$ where `∑ a_i = n`.
 
+TODO: FIX NAME
+-/
+def MvPowerSeries.truncTotalDegEq (n : ℕ) (p : MvPowerSeries σ R) : MvPolynomial σ R :=
+  ∑ m ∈ Finset.finsuppAntidiag Finset.univ n, MvPolynomial.monomial m (coeff R m p)
+
+/-- The part of a multivariate power series with total degree at most n.
+
+If `f : MvPowerSeries σ R` and `n : σ →₀ ℕ` is a (finitely-supported) function from `σ`
+to the naturals, then `truncTotalDeg R n p` is the multivariable power series obtained from `p`
+by keeping only the monomials $c\prod_i X_i^{a_i}$ where `∑ a_i ≤ n`.
+-/
+def MvPowerSeries.truncTotalDeg (n : ℕ) (p : MvPowerSeries σ R) : MvPolynomial σ R :=
+  ∑ i ∈ Finset.range n, p.truncTotalDegEq i
+
+theorem coeff_truncTotalDegEq (n : ℕ) (m : σ →₀ ℕ) (φ : MvPowerSeries σ R) :
+    (truncTotalDegEq n φ).coeff m = if Finset.univ.sum m = n then coeff R m φ else 0 := by
+  simp [truncTotalDegEq, MvPolynomial.coeff_sum]
+
+theorem coeff_truncTotalDeg (n : ℕ) (m : σ →₀ ℕ) (φ : MvPowerSeries σ R) :
+    (truncTotalDeg n φ).coeff m = if Finset.univ.sum m < n then coeff R m φ else 0 := by
+  simp_rw [truncTotalDeg, MvPolynomial.coeff_sum, coeff_truncTotalDegEq,
+    Finset.sum_ite_eq, Finset.mem_range]
 
 variable (R) in
-def MvPowerSeries.trunc_totaldeg (n : ℕ) : MvPowerSeries σ R →+ MvPolynomial σ R where
-  toFun := truncTotalDegFun n
+/--
+`MvPowerSeries.truncTotalDeg` as a monoid homomorphism.
+-/
+def MvPowerSeries.truncTotalDegHom (n : ℕ) : MvPowerSeries σ R →+ MvPolynomial σ R where
+  toFun := truncTotalDeg n
   map_zero' := by
-    simp [truncTotalDegFun]
+    simp [truncTotalDeg, truncTotalDegEq]
   map_add' := by
     intro x y
     ext m
-    by_cases hm : (m < (deg_map n) ∧ m.sum (λ _ x => x) < n)
-    · simp [coeff_truncTotalDegFun, if_pos hm]
-    · simp [coeff_truncTotalDegFun, if_neg hm]
+    rw [MvPolynomial.coeff_add]
+    rw [coeff_truncTotalDeg, coeff_truncTotalDeg, coeff_truncTotalDeg]
+    split_ifs <;> simp
 
 -- Proposition 2.11
 theorem constructive_lemma (n : ℕ) {ϕ₁ : MvPowerSeries (Fin n) 𝒪[K]}
-  {a : Fin n → 𝒪[K]}
-  (h_phi₁ : ϕ₁ = ∑ (i : Fin n), (C (Fin n) 𝒪[K] (a i)) * X i)
-  (f g : LubinTateF K π) :
-  ∃! (ϕ : MvPowerSeries (Fin n) 𝒪[K]), trunc_totaldeg (𝒪[K]) 2 ϕ = ϕ₁ ∧
-  PowerSeries.subst ϕ f.toFun = subst (subst_aux g.toFun) ϕ := sorry
-
+    {a : Fin n → 𝒪[K]}
+    (h_phi₁ : ϕ₁ = ∑ (i : Fin n), (C (Fin n) 𝒪[K] (a i)) * X i)
+    (f g : LubinTateF K π) :
+    ∃! (ϕ : MvPowerSeries (Fin n) 𝒪[K]), truncTotalDegHom (𝒪[K]) 2 ϕ = ϕ₁ ∧
+    PowerSeries.subst ϕ f.toFun = subst (subst_aux g.toFun) ϕ := by
+  sorry
 
 /-- For every `f ∈ LubinTateF K π`, there is a unique formal group law
   `F_f` with coefficient in `𝒪[K]` admitting `f` as an endomorphism.-/
@@ -116,9 +139,9 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
       obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 2 phi_eq f f)
       obtain ⟨h₁, h_hom⟩ := h₁
       calc
-        _ = (constantCoeff (Fin 2) ↥𝒪[K]) (↑((trunc_totaldeg (↥𝒪[K]) 2)
+        _ = (constantCoeff (Fin 2) ↥𝒪[K]) (↑((truncTotalDegHom (↥𝒪[K]) 2)
           (choose (constructive_lemma K π 2 phi_eq f f)))) := by
-          unfold trunc_totaldeg truncTotalDegFun deg_map
+          unfold truncTotalDegHom truncTotalDeg
           sorry
 
           -- simp [←coeff_zero_eq_constantCoeff, coeff_truncTotalDegFun]
@@ -149,7 +172,7 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
         simp [(Fin.sum_univ_three X)]
       obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 3 phi_eq' f f)
       obtain G₀ := choose (constructive_lemma K π 3 phi_eq' f f)
-      have aux₁ : (fun ϕ ↦ ↑((trunc_totaldeg (↥𝒪[K]) 2) ϕ) = φ ∧
+      have aux₁ : (fun ϕ ↦ ↑((truncTotalDegHom (↥𝒪[K]) 2) ϕ) = φ ∧
         PowerSeries.subst ϕ f.toFun = subst (subst_aux f.toFun) ϕ) G₁ := by
         simp
         constructor
@@ -158,7 +181,7 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
           sorry
         · sorry
 
-      have aux₂ : (fun ϕ ↦ ↑((trunc_totaldeg (↥𝒪[K]) 2) ϕ) = φ ∧
+      have aux₂ : (fun ϕ ↦ ↑((truncTotalDegHom (↥𝒪[K]) 2) ϕ) = φ ∧
         PowerSeries.subst ϕ f.toFun = subst (subst_aux f.toFun) ϕ) G₂ := by
         simp
         constructor
