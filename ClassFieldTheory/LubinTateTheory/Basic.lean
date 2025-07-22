@@ -44,22 +44,6 @@ instance : ProperSpace K :=
 instance : IsDiscreteValuationRing 𝒪[K] :=
   (Valued.integer.properSpace_iff_completeSpace_and_isDiscreteValuationRing_integer_and_finite_residueField.mp inferInstance).2.1
 
-
-variable (π : 𝒪[K])
-
-instance : Finite 𝓀[K] := (Valued.integer.properSpace_iff_completeSpace_and_isDiscreteValuationRing_integer_and_finite_residueField.mp inferInstance).2.2
-
-include K in
-noncomputable def residue_size : ℕ := @Fintype.card 𝓀[K] (Fintype.ofFinite (IsLocalRing.ResidueField 𝒪[K]))
-
-
-structure LubinTateF  where
-  toFun : PowerSeries 𝒪[K]
-  trunc_degree_two : PowerSeries.trunc 2 toFun = (Polynomial.C π) * Polynomial.X
-  mod_pi :
-    toFun.coeff (𝒪[K]) (residue_size K) ≡ 1 [SMOD (IsLocalRing.maximalIdeal (𝒪[K]))]
-      ∧ ∀ n ≠ (residue_size K), toFun.coeff _ n ≡ 0 [SMOD (IsLocalRing.maximalIdeal (𝒪[K]))]
-
 noncomputable section
 
 variable {σ : Type*} [DecidableEq σ] [Fintype σ] {R : Type*} [CommRing R]
@@ -101,7 +85,30 @@ theorem coeff_truncTotalDeg (n : ℕ) (m : σ →₀ ℕ) (φ : MvPowerSeries σ
   simp_rw [truncTotalDeg, MvPolynomial.coeff_sum, coeff_truncTotalDegEq,
     Finset.sum_ite_eq, Finset.mem_range]
 
-variable {R} in
+theorem coeff_truncTotalDegEq_of_totalDeg_eq (n : ℕ) (m : σ →₀ ℕ) (hm : Finset.univ.sum m = n) (φ : MvPowerSeries σ R) :
+    (truncTotalDegEq n φ).coeff m = coeff R m φ := by
+  simp only [coeff_truncTotalDegEq, hm, if_true]
+
+theorem coeff_truncTotalDeg_of_totalDeg_lt (n : ℕ) (m : σ →₀ ℕ) (hm : Finset.univ.sum m < n) (φ : MvPowerSeries σ R) :
+    (truncTotalDeg n φ).coeff m = coeff R m φ := by
+  simp only [coeff_truncTotalDeg, hm, if_true]
+
+-- #check PowerSeries.monomial
+-- theorem truncTotalDeg_powerSeries (n : ℕ) (ϕ : PowerSeries R) :
+--     truncTotalDegEq n ϕ
+--       = (MvPolynomial.pUnitAlgEquiv _).symm (Polynomial.monomial n (PowerSeries.coeff _ n ϕ)) := by
+--   ext w
+--   simp [coeff_truncTotalDegEq, MvPolynomial.coeff_X_pow]
+--   split_ifs with h₁ h₂
+--   · subst h₂
+--     simp
+
+theorem truncTotalDeg_powerSeries (n : ℕ) (ϕ : PowerSeries R) :
+    truncTotalDeg n ϕ = (MvPolynomial.pUnitAlgEquiv _).symm (ϕ.trunc n) := by
+  rw [(MvPolynomial.pUnitAlgEquiv _).eq_symm_apply]
+  ext d
+  simp [MvPolynomial.pUnitAlgEquiv_apply, PowerSeries.coeff_trunc]
+
 /--
 `MvPowerSeries.truncTotalDeg` as a monoid homomorphism.
 -/
@@ -116,6 +123,42 @@ def MvPowerSeries.truncTotalDegHom (n : ℕ) : MvPowerSeries σ R →+ MvPolynom
     rw [coeff_truncTotalDeg, coeff_truncTotalDeg, coeff_truncTotalDeg]
     split_ifs <;> simp
 
+end
+
+section LubinTateF
+
+variable (π : 𝒪[K])
+
+instance : Finite 𝓀[K] := (Valued.integer.properSpace_iff_completeSpace_and_isDiscreteValuationRing_integer_and_finite_residueField.mp inferInstance).2.2
+noncomputable instance : Fintype 𝓀[K] := Fintype.ofFinite _
+
+structure LubinTateF where
+  toFun : PowerSeries 𝒪[K]
+  trunc_degree_two : PowerSeries.trunc 2 toFun = Polynomial.C π * Polynomial.X
+  mod_pi : PowerSeries.C _ π ∣ toFun - PowerSeries.X ^ Fintype.card 𝓀[K]
+
+namespace LubinTateF
+
+variable (F : LubinTateF K π)
+
+lemma toMvPowerSeries_trunc_degree_two :
+    (F.toFun : MvPowerSeries Unit 𝒪[K]).truncTotalDeg 2
+      = MvPolynomial.C π * MvPolynomial.X default := by
+  rw [truncTotalDeg_powerSeries, (MvPolynomial.pUnitAlgEquiv _).symm_apply_eq]
+  -- convert F.trunc_degree_two
+
+lemma toMvPowerSeries_mod_pi :
+    MvPowerSeries.C _ _ π ∣ F.toFun - MvPowerSeries.X default ^ Fintype.card 𝓀[K] :=
+  F.mod_pi
+
+end LubinTateF
+
+end LubinTateF
+
+noncomputable section
+
+variable {σ : Type*} [DecidableEq σ] [Fintype σ] {R : Type*} [CommRing R]
+
 section Prop_2_11
 
 namespace MvPowerSeries
@@ -128,11 +171,24 @@ lemma constructive_lemma_ind_hyp
     ∃! ϕr : MvPolynomial (Fin n) 𝒪[K],
       ϕr.totalDegree < r
         ∧ truncTotalDegHom 2 ϕr = ϕ₁
-          ∧ truncTotalDegHom r (PowerSeries.subst ϕr.toMvPowerSeries f.toFun)
-            = truncTotalDegHom r (subst g.toFun.toMvPowerSeries ϕr.toMvPowerSeries) := by
+          ∧ truncTotalDegHom r (f.toFun.subst ϕr.toMvPowerSeries)
+            = truncTotalDegHom r (ϕr.toMvPowerSeries.subst g.toFun.toMvPowerSeries) := by
   induction r, hr using Nat.le_induction with
   | base => sorry
-  | succ n hmn ih => sorry
+  | succ n hmn ih =>
+    obtain ⟨p, ⟨hp_deg, hp_trunc, hp_comm⟩, hp_unique⟩ := ih
+    simp only at hp_unique
+
+    -- f(X) = X^q mod π
+    have h₁ := f.mod_pi
+    -- f(X) = πX + ...
+    have h₂ := f.trunc_degree_two
+    -- wts: f ∘ p = p(x1, ..., xn)^q
+    hav_mv : (C _ _) π ∣ f.toFun.subst p.toMvPowerSeries - p.toMvPowerSeries ^ residue_size K := by
+      sorry
+
+    -- have h₁ : (MvPolynomial.C (Fin n) 𝒪[K]) π ∣ f.toFun.subst p.toMvPowerSeries - p.toMvPowerSeries.subst g.toFun.toMvPowerSeries
+#check MvPowerSeries.subst
 
 -- Proposition 2.11
 theorem constructive_lemma
@@ -156,10 +212,8 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
   let ϕ₁ : MvPowerSeries (Fin 2) (𝒪[K]) :=
     X (0 : Fin 2) + X (1 : Fin 2)
   let a : Fin 2 → 𝒪[K] := fun _ => 1
-  have phi_eq : ϕ₁ = ∑ (i : Fin 2), (C (Fin 2) 𝒪[K] (a i)) * X i := by
-    simp [ϕ₁,a]
   let F_f : FormalGroup (𝒪[K]) := {
-    toFun := choose (constructive_lemma K π 2 phi_eq f f)
+    toFun := choose (constructive_lemma K π 2 (by simp) f f)
     zero_coeff := by
       obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 2 phi_eq f f)
       obtain ⟨h₁, h_hom⟩ := h₁
