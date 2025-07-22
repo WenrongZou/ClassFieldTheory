@@ -70,18 +70,33 @@ abbrev deg_map (n : ℕ) : σ →₀ ℕ :=
 abbrev subst_aux (f : PowerSeries R) : σ → MvPowerSeries σ R :=
   (fun i => PowerSeries.subst (X i) f)
 
-def MvPowerSeries.truncDegFun (n : ℕ) (φ : MvPowerSeries σ R) : MvPolynomial σ R :=
-  MvPowerSeries.truncFun (deg_map n) φ
+def MvPowerSeries.truncTotalDegFun (n : ℕ) (φ : MvPowerSeries σ R) : MvPolynomial σ R :=
+  ∑ m ∈ (Finset.Iio (deg_map n)).filter (fun f => f.sum (λ _ x => x) < n), MvPolynomial.monomial m (coeff R m φ)
+
+theorem coeff_truncTotalDegFun (n : ℕ) (m : σ →₀ ℕ) (φ : MvPowerSeries σ R) :
+    (truncTotalDegFun n φ).coeff m = if (m < (deg_map n) ∧ m.sum (λ _ x => x) < n)then coeff R m φ else 0 := by
+  classical
+  simp [truncTotalDegFun, MvPolynomial.coeff_sum]
+
 
 variable (R) in
-def MvPowerSeries.trunc_deg (n : ℕ) := trunc R (deg_map n) (σ := σ)
+def MvPowerSeries.trunc_totaldeg (n : ℕ) : MvPowerSeries σ R →+ MvPolynomial σ R where
+  toFun := truncTotalDegFun n
+  map_zero' := by
+    simp [truncTotalDegFun]
+  map_add' := by
+    intro x y
+    ext m
+    by_cases hm : (m < (deg_map n) ∧ m.sum (λ _ x => x) < n)
+    · simp [coeff_truncTotalDegFun, if_pos hm]
+    · simp [coeff_truncTotalDegFun, if_neg hm]
 
 -- Proposition 2.11
 theorem constructive_lemma (n : ℕ) {ϕ₁ : MvPowerSeries (Fin n) 𝒪[K]}
   {a : Fin n → 𝒪[K]}
   (h_phi₁ : ϕ₁ = ∑ (i : Fin n), (C (Fin n) 𝒪[K] (a i)) * X i)
   (f g : LubinTateF K π) :
-  ∃! (ϕ : MvPowerSeries (Fin n) 𝒪[K]), trunc_deg (𝒪[K]) 2 ϕ = ϕ₁ ∧
+  ∃! (ϕ : MvPowerSeries (Fin n) 𝒪[K]), trunc_totaldeg (𝒪[K]) 2 ϕ = ϕ₁ ∧
   PowerSeries.subst ϕ f.toFun = subst (subst_aux g.toFun) ϕ := sorry
 
 
@@ -101,17 +116,19 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
       obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 2 phi_eq f f)
       obtain ⟨h₁, h_hom⟩ := h₁
       calc
-        _ = (constantCoeff (Fin 2) ↥𝒪[K]) (↑((trunc_deg (↥𝒪[K]) 2)
+        _ = (constantCoeff (Fin 2) ↥𝒪[K]) (↑((trunc_totaldeg (↥𝒪[K]) 2)
           (choose (constructive_lemma K π 2 phi_eq f f)))) := by
-          unfold trunc_deg deg_map
-          simp [←coeff_zero_eq_constantCoeff, coeff_trunc]
-          intro h₃
-          have contra : 0 < Finsupp.equivFunOnFinite.symm fun (x : Fin 2) ↦ 2 := by
-            have aux : 0 < fun (x : Fin 2) ↦ 2 := by
-              exact Nat.ofNat_pos'
+          unfold trunc_totaldeg truncTotalDegFun deg_map
+          sorry
 
-            exact aux
-          contradiction
+          -- simp [←coeff_zero_eq_constantCoeff, coeff_truncTotalDegFun]
+          -- intro h₃
+          -- have contra : 0 < Finsupp.equivFunOnFinite.symm fun (x : Fin 2) ↦ 2 := by
+          --   have aux : 0 < fun (x : Fin 2) ↦ 2 := by
+          --     exact Nat.ofNat_pos'
+
+          --   exact aux
+          -- contradiction
         _ = 0 := by
           rw [h₁]
           simp [ϕ₁]
@@ -132,7 +149,7 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
         simp [(Fin.sum_univ_three X)]
       obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 3 phi_eq' f f)
       obtain G₀ := choose (constructive_lemma K π 3 phi_eq' f f)
-      have aux₁ : (fun ϕ ↦ ↑((trunc_deg (↥𝒪[K]) 2) ϕ) = φ ∧
+      have aux₁ : (fun ϕ ↦ ↑((trunc_totaldeg (↥𝒪[K]) 2) ϕ) = φ ∧
         PowerSeries.subst ϕ f.toFun = subst (subst_aux f.toFun) ϕ) G₁ := by
         simp
         constructor
@@ -141,7 +158,7 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
           sorry
         · sorry
 
-      have aux₂ : (fun ϕ ↦ ↑((trunc_deg (↥𝒪[K]) 2) ϕ) = φ ∧
+      have aux₂ : (fun ϕ ↦ ↑((trunc_totaldeg (↥𝒪[K]) 2) ϕ) = φ ∧
         PowerSeries.subst ϕ f.toFun = subst (subst_aux f.toFun) ϕ) G₂ := by
         simp
         constructor
