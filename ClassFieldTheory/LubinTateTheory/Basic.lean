@@ -103,6 +103,12 @@ theorem coeff_truncTotalDeg_of_totalDeg_lt (n : ℕ) (m : σ →₀ ℕ) (hm : F
     (truncTotalDeg n φ).coeff m = coeff R m φ := by
   simp only [coeff_truncTotalDeg, hm, if_true]
 
+lemma MvPowerSeries.exists_pow_mul_eq_truncTotalDeg (n : ℕ) (φ : MvPowerSeries σ R) :
+    ∃ ψ : MvPowerSeries σ R,
+      φ = (truncTotalDeg n φ).toMvPowerSeries
+        + MvPowerSeries.monomial R (Finsupp.equivFunOnFinite.symm 2) 1 * ψ := by
+  sorry
+
 theorem truncTotalDegEq_powerSeries (n : ℕ) (ϕ : PowerSeries R) :
     truncTotalDegEq n ϕ
       = (MvPolynomial.pUnitAlgEquiv _).symm (Polynomial.monomial n (PowerSeries.coeff _ n ϕ)) := by
@@ -142,6 +148,7 @@ def MvPowerSeries.truncTotalDegHom (n : ℕ) : MvPowerSeries σ R →+ MvPolynom
 theorem MvPowerSeries.truncTotalDegHom_apply (n : ℕ) (p : MvPowerSeries σ R) :
     p.truncTotalDegHom n = p.truncTotalDeg n :=
   rfl
+
 
 end
 
