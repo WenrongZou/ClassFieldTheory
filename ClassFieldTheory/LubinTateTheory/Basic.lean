@@ -49,12 +49,12 @@ noncomputable section
 
 variable {σ : Type*} [DecidableEq σ] [Fintype σ] {R : Type*} [CommRing R]
 
-/--
-Given a power series p(X) ∈ R⟦X⟧ and an index i, we may view it as a
-multivariate power series p(X_i) ∈ R⟦X_1, ..., X_n⟧.
--/
-abbrev PowerSeries.toMvPowerSeries (f : PowerSeries R) (i : σ) : MvPowerSeries σ R :=
-  PowerSeries.subst (MvPowerSeries.X i) f
+-- /--
+-- Given a power series p(X) ∈ R⟦X⟧ and an index i, we may view it as a
+-- multivariate power series p(X_i) ∈ R⟦X_1, ..., X_n⟧.
+-- -/
+-- abbrev PowerSeries.toMvPowerSeries (f : PowerSeries R) (i : σ) : MvPowerSeries σ R :=
+--   PowerSeries.subst (MvPowerSeries.X i) f
 
 /-- The part of a multivariate power series with total degree n.
 
@@ -219,8 +219,8 @@ theorem constructive_lemma
 
 theorem constructive_lemma_two
     (f g : LubinTateF K π) :
-    ∃! (ϕ : MvPowerSeries (Fin 2) 𝒪[K]), ((truncTotalDegHom 2 ϕ) : MvPowerSeries (Fin 2) 𝒪[K])
-    = X (0 : Fin 2) + X (1 : Fin 2) ∧
+    ∃! (ϕ : MvPowerSeries (Fin 2) 𝒪[K]), (truncTotalDegHom 2 ϕ)
+    = MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) ∧
     PowerSeries.subst ϕ f.toFun = subst g.toFun.toMvPowerSeries ϕ := by
   let a := fun (x : Fin 2) => 1
 
@@ -241,6 +241,22 @@ end MvPowerSeries
 
 end Prop_2_11
 
+theorem truncTotalDegTwo.X {x : σ} :
+  (truncTotalDeg 2 (X x)).toMvPowerSeries = X x (R := R) := by
+  sorry
+
+theorem FormalGroup.ext_iff (F₁ F₂ : FormalGroup R) :
+  F₁ = F₂ ↔ F₁.toFun = F₂.toFun := by
+  constructor
+  · intro h
+    simp [h]
+  · intro h
+    sorry
+
+theorem FormalGroup.truncTotalDegTwo (F : FormalGroup R) :
+  ((truncTotalDegHom 2) F.toFun) = MvPolynomial.X 0 + MvPolynomial.X 1 := by
+  sorry
+
 /-- For every `f ∈ LubinTateF K π`, there is a unique formal group law
   `F_f` with coefficient in `𝒪[K]` admitting `f` as an endomorphism.-/
 theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
@@ -249,7 +265,33 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
   let ϕ₁ : MvPolynomial (Fin 2) (𝒪[K]) :=
     MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2)
   have phi_supp : ∀ i ∈ ϕ₁.support, Finset.univ.sum ⇑i = 1 := by
-    sorry
+    intro i
+    have supp_eq : ϕ₁.support =
+      {(Finsupp.single 0 1), (Finsupp.single 1 1)} := by
+      refine Finset.ext_iff.mpr ?_
+      intro d
+      constructor
+      · intro hd
+        simp [ϕ₁] at hd ⊢
+        by_contra hc
+        simp at hc
+        obtain ⟨hc₁, hc₂⟩ := hc
+        simp [MvPolynomial.coeff_X', Ne.symm hc₁, Ne.symm hc₂] at hd
+      ·
+        simp
+        intro h
+        have neg_aux : ¬ Finsupp.single (1 : Fin 2) 1 = Finsupp.single 0 1 := by
+          refine Finsupp.ne_iff.mpr ?_
+          use 1
+          simp
+        obtain h1 | h2 := h
+        · simp [ϕ₁, MvPolynomial.coeff_X', h1, neg_aux]
+        · simp [ϕ₁, MvPolynomial.coeff_X', h2, Ne.symm neg_aux]
+    simp [supp_eq]
+    intro h
+    obtain h1 | h2 := h
+    simp [h1]
+    simp [h2]
   have phi_eq :ϕ₁ = MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) := rfl
   let F_f : FormalGroup (𝒪[K]) := {
     toFun := choose (constructive_lemma K π 2 phi_supp f f)
@@ -276,7 +318,7 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
         rw [←htrunc]
         simp [truncTotalDegHom, coeff_truncTotalDeg]
       rw [eq_aux₁, phi_eq]
-      simp  [a]
+      simp
       rw [coeff_X, if_neg]
       refine Finsupp.ne_iff.mpr ?_
       use 0
@@ -292,21 +334,27 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
         rw [←htrunc]
         simp [truncTotalDegHom, coeff_truncTotalDeg]
       rw [eq_aux₁, phi_eq]
-      simp  [a]
+      simp
       rw [coeff_X, if_neg]
       refine Finsupp.ne_iff.mpr ?_
       use 0
       simp
     assoc := by
-      let G₁ := subst (subst_fir (choose (constructive_lemma K π 2 phi_supp f f)))
-        (choose (constructive_lemma K π 2 phi_supp f f))
-      let G₂ := subst (subst_sec (choose (constructive_lemma K π 2 phi_supp f f)))
-        (choose (constructive_lemma K π 2 phi_supp f f))
-      let b : Fin 3 → 𝒪[K] := fun x => 1
+      let F_f := choose (constructive_lemma K π 2 phi_supp f f)
+      have F_feq : F_f = choose (constructive_lemma K π 2 phi_supp f f) := by
+        sorry
+      let hf := choose_spec (constructive_lemma K π 2 phi_supp f f)
+      obtain ⟨⟨hf₁, hf₂⟩, hf₃⟩ := hf
+      rw [←F_feq] at hf₂
+      let G₁ := subst (subst_fir F_f) F_f
+      let G₂ := subst (subst_sec F_f) F_f
+      have G_eq₁ : G₁ = subst (subst_fir F_f) F_f := rfl
+      have G_eq₂ : G₂ = subst (subst_sec F_f) F_f := rfl
       -- φ = X 0 + X 1 + X 2
       let φ : MvPolynomial (Fin 3) 𝒪[K] := MvPolynomial.X (0 : Fin 3) +
         MvPolynomial.X 1 + MvPolynomial.X 2
       have phi_supp' : ∀ i ∈ φ.support, Finset.univ.sum ⇑i = 1 := by
+        -- same as above
         sorry
       have phi_eq' : φ = MvPolynomial.X (0 : Fin 3) +
         MvPolynomial.X 1 + MvPolynomial.X 2 := by rfl
@@ -319,51 +367,65 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
         simp
         constructor
         ·
-          let choose_f := choose (constructive_lemma K π 2 phi_supp f f)
+
           rw [truncTotalDegHom_of_subst, htrunc]
           unfold ϕ₁
-          have eq_aux : (subst (subst_fir choose_f)
+          have eq_aux : (subst (subst_fir F_f)
             ((MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) :
               MvPolynomial (Fin 2) 𝒪[K]) : MvPowerSeries (Fin 2) 𝒪[K]) (R := 𝒪[K]) )
-            = (subst (subst_fir_aux) choose_f) + X (2 : Fin 3) := by
-            sorry
+            = (subst (subst_fir_aux) F_f) + X (2 : Fin 3) := by
+            simp
+            have has_subst : (constantCoeff _ (𝒪[K]) F_f) = 0 := by
+              sorry
+            rw [subst_add (has_subst_fir _ has_subst), subst_X (has_subst_fir _ has_subst),
+              subst_X (has_subst_fir _ has_subst)]
           rw [eq_aux]
           simp
           unfold φ
-          have eq_aux₂ : MvPolynomial.toMvPowerSeries ((truncTotalDegHom 2)
-            (X (2 : Fin 3)))  = X (2 : Fin 3) := by
+          have eq_aux₂ : ((truncTotalDegHom 2)
+            (X (2 : Fin 3)))  = MvPolynomial.X (2 : Fin 3) (R := 𝒪[K]) := by
             simp [truncTotalDegHom]
-            refine MvPowerSeries.ext_iff.mpr ?_
+            refine MvPolynomial.ext_iff.mpr ?_
             intro n
-            simp [coeff_truncTotalDeg]
-            intro h
-            simp [coeff_X]
-            refine Finsupp.ne_iff.mpr ?_
-            by_contra hc
-            simp at hc
-            have aux : Finset.univ.sum ⇑n = 1 := by
-              simp [hc]
-            linarith
-          have eq_aux₃ : MvPolynomial.toMvPowerSeries
-            ((truncTotalDegHom (↥𝒪[K]) 2) (subst subst_fir_aux choose_f))
-            = X (0 : Fin 3) + X (1 : Fin 3) := by
-            rw [truncTotalDegHom_of_subst', htrunc]
-            unfold ϕ₁
-            rw [subst_add has_subst_fir_aux (X 0) (X 1), subst_X has_subst_fir_aux, subst_X has_subst_fir_aux]
-            simp [subst_fir_aux, truncTotalDegHom, Y₀, Y₁]
-            ext d
-            simp [coeff_truncTotalDeg, coeff_X]
-            by_cases deq1 : d = Finsupp.single (0 : Fin 3) 1
-            · simp [deq1]
-            by_cases deq2 : d = Finsupp.single (1 : Fin 3) 1
-            · simp [deq2]
-            simp [deq1, deq2]
-          simp [eq_aux₃,eq_aux₂]
+            simp [coeff_truncTotalDeg, MvPolynomial.coeff_X']
+            by_cases h1 : Finsupp.single 2 1 = n
+            · have haux : Finset.univ.sum ⇑n < 2 := by
+                simp [←h1]
+              simp [←h1, coeff_X]
+            · simp [h1, coeff_X, Ne.symm h1]
+          have eq_aux₃ : ((truncTotalDegHom 2) (subst subst_fir_aux F_f))
+            = MvPolynomial.X (0 : Fin 3) + MvPolynomial.X (1 : Fin 3) (R := 𝒪[K]) := by
+            have aux : ((truncTotalDegHom 2) (subst subst_fir_aux F_f)).toMvPowerSeries
+            = (MvPolynomial.X (0 : Fin 3) + MvPolynomial.X (1 : Fin 3) (R := 𝒪[K])).toMvPowerSeries := by
+              rw [truncTotalDegHom_of_subst', htrunc]
+              unfold ϕ₁
+              simp [subst_add has_subst_fir_aux (X 0) (X 1), subst_X has_subst_fir_aux]
+              simp [subst_fir_aux, truncTotalDegHom, Y₀, Y₁, truncTotalDegTwo.X]
+            norm_cast at aux
+          rw [eq_aux₂, eq_aux₃]
         ·
+          rw [G_eq₁]
+          have eq_aux₁ : PowerSeries.subst (subst (subst_fir F_f) F_f) f.toFun
+            = subst (subst_fir F_f) (PowerSeries.subst F_f f.toFun) := by
+            sorry
+          rw [eq_aux₁, hf₂]
+          let map_aux : Fin 2 → MvPowerSeries (Fin 3) (𝒪[K])
+          | ⟨0, _⟩ => PowerSeries.subst (subst subst_fir_aux F_f) f.toFun
+          | ⟨1, _⟩ => f.toFun.toMvPowerSeries 2
+          have eq_aux₂ : subst (subst_fir F_f) (subst f.toFun.toMvPowerSeries F_f)
+            = subst map_aux F_f := by sorry
+          -- have eq_aux₃ : PowerSeries.subst (subst subst_fir_aux F_f) f.toFun
+          --   =
+          rw [eq_aux₂]
+          unfold map_aux
+
+
+          -- use hf₂
+
 
 
           sorry
-
+      -- should be something same as aux₁
       have aux₂ : (fun ϕ ↦ ↑((truncTotalDegHom 2) ϕ) = φ ∧
         PowerSeries.subst ϕ f.toFun = subst f.toFun.toMvPowerSeries ϕ) G₂ := by
         simp
@@ -391,44 +453,27 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
         _ = 0 := by
           simp [coeff_aux₁]
     hom := by
-      obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 2 phi_eq f f)
+      obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 2 phi_supp f f)
       obtain ⟨h₁, h_hom⟩ := h₁
-      have map_eq_aux : f.toFun.toMvPowerSeries = subst_hom f.toFun := by
-        ext x t
-        congr
-        unfold subst_hom
-        by_cases hx0 : x = 0
-        · simp [hx0]
-        · simp [show x = 1 by omega]
-      rw [←map_eq_aux, h_hom]
+      rw [h_hom]
   }
   refine existsUnique_of_exists_of_unique ?_ ?_
   · use F_f, Hom_f
-  ·
-    obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 2 phi_eq f f)
+  · obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 2 phi_supp f f)
     obtain ⟨h₁, h_hom⟩ := h₁
     intro y₁ y₂ hy₁ hy₂
     obtain ⟨α, ha⟩ := hy₁
     obtain ⟨β, hb⟩ := hy₂
     obtain uni₁ := constructive_lemma_two K π f f
     obtain ha₁ := α.hom
+    obtain hb₁ := β.hom
     obtain ⟨F_f', h1, h2⟩ := uni₁
-    have eq_aux_y₁ : MvPolynomial.toMvPowerSeries ((truncTotalDegHom (↥𝒪[K]) 2) y₁.toFun) = X (0 : Fin 2) + X 1 := by
-      sorry
-    have eq_aux_y₂ : MvPolynomial.toMvPowerSeries ((truncTotalDegHom (↥𝒪[K]) 2) y₂.toFun) = X 0 + X 1 := by
-      sorry
-    have eq_aux_y : (fun ϕ ↦ ↑((truncTotalDegHom (↥𝒪[K]) 2) ϕ : MvPowerSeries (Fin 2) 𝒪[K]) = X 0 + X 1 ∧ PowerSeries.subst ϕ f.toFun = subst (subst_aux f.toFun) ϕ)
-      y₁.toFun := by
-      sorry
-    have eq_aux_y' : (fun ϕ ↦ ↑((truncTotalDegHom (↥𝒪[K]) 2) ϕ : MvPowerSeries (Fin 2) 𝒪[K]) = X 0 + X 1 ∧ PowerSeries.subst ϕ f.toFun = subst (subst_aux f.toFun) ϕ)
-      y₂.toFun := by
-      sorry
-    obtain eq₁ := h2 y₁.toFun eq_aux_y
-    obtain eq₂ := h2 y₂.toFun eq_aux_y'
+    obtain eq₁ := h2 y₁.toFun ⟨FormalGroup.truncTotalDegTwo y₁, by rw [←ha,ha₁]⟩
+    obtain eq₂ := h2 y₂.toFun ⟨FormalGroup.truncTotalDegTwo y₂, by rw [←hb,hb₁]⟩
+    have toFun_eq : y₁.toFun = y₂.toFun := by
+      rw [eq₁, ←eq₂]
+    exact (FormalGroup.ext_iff y₁ y₂).mpr toFun_eq
 
-
-
-    sorry
 
 
 

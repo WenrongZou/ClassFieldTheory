@@ -171,10 +171,16 @@ structure CommFormalGroup extends FormalGroup R where
 -- a (F (X, Y))
 
 -- G (a (X), a (Y))
-abbrev subst_hom (a : PowerSeries  R):
-  Fin 2 → MvPowerSeries (Fin 2) R
-  | ⟨0, _⟩ => PowerSeries.subst  X₀ a
-  | ⟨1, _⟩ => PowerSeries.subst  X₁ a
+-- abbrev subst_hom (a : PowerSeries  R):
+--   Fin 2 → MvPowerSeries (Fin 2) R
+--   | ⟨0, _⟩ => PowerSeries.subst  X₀ a
+--   | ⟨1, _⟩ => PowerSeries.subst  X₁ a
+/--
+Given a power series p(X) ∈ R⟦X⟧ and an index i, we may view it as a
+multivariate power series p(X_i) ∈ R⟦X_1, ..., X_n⟧.
+-/
+abbrev PowerSeries.toMvPowerSeries (f : PowerSeries R) (i : σ) : MvPowerSeries σ R :=
+  PowerSeries.subst (MvPowerSeries.X i) f
 
 /-- Let `G₁, G₂` be two formal group laws over `CommRing A`. A homomorphism (over `A`)
   `F (X, Y) → G (X, Y)` is a power series `α(X) = b₁ * X + b₂ * X ^ 2 + ⋯` with coefficients
@@ -182,7 +188,7 @@ abbrev subst_hom (a : PowerSeries  R):
 structure FormalGroupHom  (G₁ G₂ : FormalGroup R) where
   toFun : PowerSeries R
   zero_constantCoeff : PowerSeries.constantCoeff R toFun = 0
-  hom : PowerSeries.subst (G₁.toFun) toFun = subst (R := R) (subst_hom toFun) G₂.toFun
+  hom : PowerSeries.subst (G₁.toFun) toFun = subst (R := R) toFun.toMvPowerSeries G₂.toFun
 
 end
 
