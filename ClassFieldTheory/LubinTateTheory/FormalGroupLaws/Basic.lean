@@ -152,7 +152,8 @@ abbrev subst_X₁ : Fin 2 → MvPowerSeries (Fin 2) R
 
 variable (R) in
 /-- A structure for a 1-dimensional formal group law over `R`-/
-structure FormalGroup  where
+@[ext]
+structure FormalGroup where
   toFun : MvPowerSeries (Fin 2) R
   zero_coeff : constantCoeff (Fin 2) R toFun = 0
   lin_coeff_X : coeff R (Finsupp.single 0 1) toFun = 1

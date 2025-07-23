@@ -312,10 +312,11 @@ theorem constructive_lemma_two
     ∃! (ϕ : MvPowerSeries (Fin 2) 𝒪[K]), (truncTotalDegHom 2 ϕ)
     = MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) ∧
     PowerSeries.subst ϕ f.toFun = subst g.toFun.toMvPowerSeries ϕ := by
-  let a := fun (x : Fin 2) => 1
-
-  sorry
-
+  convert constructive_lemma K π 2 (ϕ₁ := .X 0 + .X 1) ?_ f g
+  intro i hi
+  have : i ∈ (_ : Multiset _) := Finset.mem_of_subset MvPolynomial.support_add hi
+  simp [MvPolynomial.support_X] at this
+  rcases this with rfl | rfl <;> simp
 
 lemma truncTotalDegHom_of_subst (f g : MvPowerSeries (Fin 2) R) :
   truncTotalDegHom 2 (subst (subst_fir g) f) =
@@ -333,20 +334,40 @@ end Prop_2_11
 
 variable [DecidableEq σ] [Fintype σ]
 
-theorem truncTotalDegTwo.X {x : σ}  :
-  (truncTotalDeg 2 (X x)).toMvPowerSeries = X x (R := R) := by
+theorem truncTotalDegEq_X {n : ℕ} {i : σ}  :
+    (truncTotalDegEq n (X i)).toMvPowerSeries = if n = 1 then X i (R := R) else 0 := by
+  simp [truncTotalDegEq, coeff_X]
+  have (x : σ →₀ ℕ) :
+      (MvPolynomial.monomial x) (if x = Finsupp.single i 1 then 1 else 0)
+        = if x = Finsupp.single i 1 then MvPolynomial.monomial x (1 : R) else MvPolynomial.monomial x 0 := by
+    split_ifs <;> rfl
+  rw [Finset.sum_congr rfl fun x _ ↦ this x]
+  simp_rw [MvPolynomial.monomial_zero, Finset.sum_ite_eq', Finset.mem_finsuppAntidiag,
+    Finsupp.univ_sum_single_apply, Finset.subset_univ, and_true, eq_comm]
+  split_ifs <;> simp; rfl
+
+theorem truncTotalDegTwo.X {n : ℕ} (hn : 1 < n) {i : σ}  :
+    (truncTotalDeg n (X i)).toMvPowerSeries = X i (R := R) := by
+  ext d
+  have (x : ℕ) :
+      (coeff R d) (if x = 1 then MvPowerSeries.X i else 0)
+        = if x = 1 then (coeff R d) (MvPowerSeries.X i) else 0 := by
+    split_ifs <;> rfl
+  simp_rw [truncTotalDeg, MvPolynomial.coeff_coe, MvPolynomial.coeff_sum,
+    ← MvPolynomial.coeff_coe, truncTotalDegEq_X, this, Finset.sum_ite_eq',
+    MvPowerSeries.coeff_X]
+  simp [hn]
+
+/-- TODO -/
+lemma Finset.finsuppAntidiag_fin2_1 :
+    (Finset.univ : Finset (Fin 2)).finsuppAntidiag 1
+       = {Finsupp.single 0 1, Finsupp.single 1 1} := by
   sorry
 
-theorem FormalGroup.ext_iff (F₁ F₂ : FormalGroup R) :
-  F₁ = F₂ ↔ F₁.toFun = F₂.toFun := by
-  constructor
-  · intro h
-    simp [h]
-  · intro h
-    sorry
-
 theorem FormalGroup.truncTotalDegTwo (F : FormalGroup R) :
-  ((truncTotalDegHom 2) F.toFun) = MvPolynomial.X 0 + MvPolynomial.X 1 := by
+    ((truncTotalDegHom 2) F.toFun) = MvPolynomial.X 0 + MvPolynomial.X 1 := by
+  simp [truncTotalDegHom_apply, truncTotalDeg, Finset.sum_range,
+    truncTotalDegEq, Finset.finsuppAntidiag_fin2_1]
   sorry
 
 /-- For every `f ∈ LubinTateF K π`, there is a unique formal group law
@@ -564,7 +585,7 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
     obtain eq₂ := h2 y₂.toFun ⟨FormalGroup.truncTotalDegTwo y₂, by rw [←hb,hb₁]⟩
     have toFun_eq : y₁.toFun = y₂.toFun := by
       rw [eq₁, ←eq₂]
-    exact (FormalGroup.ext_iff y₁ y₂).mpr toFun_eq
+    exact FormalGroup.ext_iff.mpr toFun_eq
 
 
 
