@@ -289,11 +289,12 @@ lemma constructive_lemma_ind_hyp
       apply dvd_prod_pow_sub_prod_pow_of_dvd_sub h_second_term_inner
     have h_diff_terms : (C _ _) π ∣ p.toMvPowerSeries ^ Fintype.card 𝓀[K] - p.toMvPowerSeries.subst (X · ^ Fintype.card 𝓀[K]) := by
       sorry
+    sorry
     --   sorry
     -- hav_mv : (C _ _) π ∣ f.toFun.subst p.toMvPowerSeries - p.toMvPowerSeries ^ residue_size K := by
     --   sorry
 
-    -- have h₁ : (MvPolynomial.C (Fin n) 𝒪[K]) π ∣ f.toFun.subst p.toMvPowerSeries - p.toMvPowerSeries.subst g.toFun.toMvPowerSeries
+    -- have h₁ : (sMvPolynomial.C (Fin n) 𝒪[K]) π ∣ f.toFun.subst p.toMvPowerSeries - p.toMvPowerSeries.subst g.toFun.toMvPowerSeries
 
 -- Proposition 2.11
 theorem constructive_lemma
@@ -330,7 +331,9 @@ end MvPowerSeries
 
 end Prop_2_11
 
-theorem truncTotalDegTwo.X {x : σ} :
+variable [DecidableEq σ] [Fintype σ]
+
+theorem truncTotalDegTwo.X {x : σ}  :
   (truncTotalDeg 2 (X x)).toMvPowerSeries = X x (R := R) := by
   sorry
 
