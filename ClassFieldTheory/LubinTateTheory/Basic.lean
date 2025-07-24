@@ -327,9 +327,9 @@ lemma truncTotalDegHom_of_subst' (g : MvPowerSeries (Fin 2) R) :
   truncTotalDegHom 2 (subst (subst_fir_aux (R := R)) (truncTotalDegHom 2 g) (R := R) ):= by
   sorry
 
-omit [DecidableEq σ] [Fintype σ] in
+omit [DecidableEq σ] [Fintype σ] in 
 lemma subst_congr {τ : Type*} { f : MvPowerSeries σ R} {g h : σ → MvPowerSeries τ R} (h_gh : g = h) :
-  subst g f = subst h f := by
+  subst g f = subst h f := by 
   rw [h_gh]
 
 
@@ -350,8 +350,8 @@ theorem FormalGroup.truncTotalDegTwo (F : FormalGroup R) :
   ((truncTotalDegHom 2) F.toFun) = MvPolynomial.X 0 + MvPolynomial.X 1 := by
   sorry
 
-theorem constant_of_truncTotalDeg_ge_one (f : MvPowerSeries σ R) {d : ℕ} (hd : d ≥ 1):
-  MvPolynomial.constantCoeff (truncTotalDegHom d f) = constantCoeff _ R f := by
+theorem constant_of_truncTotalDeg_ge_one (f : MvPowerSeries σ R) {d : ℕ} (hd : d ≥ 1): 
+  MvPolynomial.constantCoeff (truncTotalDegHom d f) = constantCoeff _ R f := by 
   sorry
 
 /-- For every `f ∈ LubinTateF K π`, there is a unique formal group law
@@ -516,10 +516,10 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
             = subst map_aux F_f := by
 
             rw [subst_comp_subst_apply]
-            apply subst_congr
-            -- proving two map is equal using like ext
+            apply subst_congr 
+            -- proving two map is equal using like ext 
             sorry
-
+          
             -- Two HasSubst
             sorry
             sorry
