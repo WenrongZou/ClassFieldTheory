@@ -327,9 +327,9 @@ lemma truncTotalDegHom_of_subst' (g : MvPowerSeries (Fin 2) R) :
   truncTotalDegHom 2 (subst (subst_fir_aux (R := R)) (truncTotalDegHom 2 g) (R := R) ):= by
   sorry
 
-omit [DecidableEq σ] [Fintype σ] in 
+omit [DecidableEq σ] [Fintype σ] in
 lemma subst_congr {τ : Type*} { f : MvPowerSeries σ R} {g h : σ → MvPowerSeries τ R} (h_gh : g = h) :
-  subst g f = subst h f := by 
+  subst g f = subst h f := by
   rw [h_gh]
 
 
@@ -350,8 +350,8 @@ theorem FormalGroup.truncTotalDegTwo (F : FormalGroup R) :
   ((truncTotalDegHom 2) F.toFun) = MvPolynomial.X 0 + MvPolynomial.X 1 := by
   sorry
 
-theorem constant_of_truncTotalDeg_ge_one (f : MvPowerSeries σ R) {d : ℕ} (hd : d ≥ 1): 
-  MvPolynomial.constantCoeff (truncTotalDegHom d f) = constantCoeff _ R f := by 
+theorem constant_of_truncTotalDeg_ge_one (f : MvPowerSeries σ R) {d : ℕ} (hd : d ≥ 1):
+  MvPolynomial.constantCoeff (truncTotalDegHom d f) = constantCoeff _ R f := by
   sorry
 
 /-- For every `f ∈ LubinTateF K π`, there is a unique formal group law
@@ -452,12 +452,19 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
       have phi_supp' : ∀ i ∈ φ.support, Finset.univ.sum ⇑i = 1 := by
         -- same as above
         sorry
+      have constantF_f : constantCoeff _ _  F_f = 0  := by sorry
       have phi_eq' : φ = MvPolynomial.X (0 : Fin 3) +
         MvPolynomial.X 1 + MvPolynomial.X 2 := by rfl
       obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 3 phi_supp' f f)
       obtain G₀ := choose (constructive_lemma K π 3 phi_supp' f f)
       obtain ⟨h, hunique⟩ := choose_spec (constructive_lemma K π 2 phi_supp f f)
       obtain ⟨htrunc, hsubst⟩ := h
+      have has_subst_fin3 : HasSubst f.toFun.toMvPowerSeries (σ := Fin 3) (S := 𝒪[K]) := by
+        refine hasSubst_of_constantCoeff_zero ?_
+        sorry
+      have has_subst_fin2 : HasSubst f.toFun.toMvPowerSeries (σ := Fin 2) (S := 𝒪[K]) := by
+        refine hasSubst_of_constantCoeff_zero ?_
+        sorry
       have aux₁ : (fun ϕ ↦ ↑((truncTotalDegHom  2) ϕ) = φ ∧
         PowerSeries.subst ϕ f.toFun = subst f.toFun.toMvPowerSeries ϕ) G₁ := by
         simp
@@ -504,27 +511,20 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
           have eq_aux₁ : PowerSeries.subst (subst (subst_fir F_f) F_f) f.toFun
             = subst (subst_fir F_f) (PowerSeries.subst F_f f.toFun) := by
             simp [PowerSeries.subst]
-            rw [subst_comp_subst_apply]
-            -- Two HasSubst
-            sorry
-            sorry
+            rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.of_constantCoeff_zero constantF_f))
+              (has_subst_fir F_f constantF_f)]
           rw [eq_aux₁, hf₂]
           let map_aux : Fin 2 → MvPowerSeries (Fin 3) (𝒪[K])
           | ⟨0, _⟩ => PowerSeries.subst (subst subst_fir_aux F_f) f.toFun
           | ⟨1, _⟩ => f.toFun.toMvPowerSeries 2
           have eq_aux₂ : subst (subst_fir F_f) (subst f.toFun.toMvPowerSeries F_f)
             = subst map_aux F_f := by
-
             rw [subst_comp_subst_apply]
-            apply subst_congr 
-            -- proving two map is equal using like ext 
+            apply subst_congr
+            funext s
             sorry
-          
-            -- Two HasSubst
-            sorry
-            sorry
-          -- have eq_aux₃ : PowerSeries.subst (subst subst_fir_aux F_f) f.toFun
-          --   =
+            exact has_subst_fin2
+            exact (has_subst_fir F_f constantF_f)
           rw [eq_aux₂]
           unfold map_aux
           let map_aux' : Fin 2 → MvPowerSeries (Fin 3) (𝒪[K])
@@ -543,35 +543,26 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
             · simp [hx₀]
               unfold map_aux' subst_fir subst_fir_aux
               simp
-              rw [subst_comp_subst_apply]
+              rw [subst_comp_subst_apply has_subst_fir_aux has_subst_fin3]
               congr
               funext x' t'
               by_cases hx₀' : x' = 0
               · simp [hx₀', Y₀]
-                rw [subst_X]
-                -- HasSubst
-                sorry
+                rw [subst_X has_subst_fin3]
               · have hx'eq : x' = 1 := by
                   omega
                 simp [hx'eq]
-                rw [subst_X]
-                -- HasSubst
-                sorry
-              -- two HasSubst
-              sorry
-              sorry
+                rw [subst_X has_subst_fin3]
             ·
 
               have hx₁ : x = 1 := by omega
               simp [hx₁]
               unfold subst_fir
               simp [Y₂]
-              rw [subst_X]
-              -- HasSubst
-              sorry
+              rw [subst_X has_subst_fin3]
           rw [map_eq]
           sorry
-          sorry
+          exact has_subst_fin3
       -- should be something same as aux₁
       have aux₂ : (fun ϕ ↦ ↑((truncTotalDegHom 2) ϕ) = φ ∧
         PowerSeries.subst ϕ f.toFun = subst f.toFun.toMvPowerSeries ϕ) G₂ := by
