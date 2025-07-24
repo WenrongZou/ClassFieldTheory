@@ -522,7 +522,22 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
             rw [subst_comp_subst_apply]
             apply subst_congr
             funext s
-            sorry
+            by_cases hs₀ : s = 0
+            · unfold subst_fir
+              simp [map_aux, hs₀, PowerSeries.toMvPowerSeries, PowerSeries.subst]
+              rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 0))
+                (has_subst_fir F_f constantF_f)]
+              apply subst_congr
+              funext t
+              rw [subst_X (has_subst_fir F_f constantF_f)]
+            · have hs₁ : s = 1 := by omega
+              unfold subst_fir
+              simp [map_aux, hs₁, PowerSeries.toMvPowerSeries, PowerSeries.subst]
+              rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 1))
+                (has_subst_fir F_f constantF_f)]
+              apply subst_congr
+              funext t
+              rw [subst_X (has_subst_fir F_f constantF_f)]
             exact has_subst_fin2
             exact (has_subst_fir F_f constantF_f)
           rw [eq_aux₂]
@@ -532,9 +547,32 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
           | ⟨1, _⟩ => f.toFun.toMvPowerSeries 1
           have eq_aux₃ : PowerSeries.subst (subst subst_fir_aux F_f) f.toFun
             = subst map_aux' F_f := by
-            -- use hf₂
-            sorry
-          rw [eq_aux₃, subst_comp_subst_apply]
+            -- unfold PowerSeries.subst
+            -- rw [←subst_comp_subst_apply]
+            -- unfold map_aux'
+            have eq_aux : subst subst_fir_aux (PowerSeries.subst F_f f.toFun)
+              = subst subst_fir_aux (subst f.toFun.toMvPowerSeries F_f) (S := 𝒪[K]) := by
+              rw [hf₂]
+            rw [PowerSeries.subst] at eq_aux
+            rw [PowerSeries.subst, ←subst_comp_subst_apply (hasSubst_of_constantCoeff_zero fun s ↦ constantF_f) has_subst_fir_aux , eq_aux, subst_comp_subst_apply has_subst_fin2 has_subst_fir_aux]
+            apply subst_congr
+            simp [map_aux']
+            unfold subst_fir_aux PowerSeries.toMvPowerSeries
+            funext s
+            by_cases hs₀ : s = 0
+            · simp [hs₀]
+              unfold PowerSeries.subst
+              rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 0)) has_subst_fir_aux]
+              apply subst_congr
+              funext t
+              rw [subst_X has_subst_fir_aux]
+            · have hs₁ : s = 1 := by omega
+              simp [hs₁]
+              rw [PowerSeries.subst, subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 1)) has_subst_fir_aux]
+              apply subst_congr
+              funext t
+              rw [subst_X has_subst_fir_aux ]
+          rw [eq_aux₃, subst_comp_subst_apply (has_subst_fir F_f constantF_f) has_subst_fin3]
           have map_eq : (fun x ↦ match x with
             | ⟨0, isLt⟩ => subst map_aux' F_f
             | ⟨1, isLt⟩ => f.toFun.toMvPowerSeries 2) = (fun s ↦ subst f.toFun.toMvPowerSeries (subst_fir F_f s)) := by
@@ -547,22 +585,18 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
               congr
               funext x' t'
               by_cases hx₀' : x' = 0
-              · simp [hx₀', Y₀]
+              · simp [hx₀']
                 rw [subst_X has_subst_fin3]
               · have hx'eq : x' = 1 := by
                   omega
                 simp [hx'eq]
                 rw [subst_X has_subst_fin3]
-            ·
-
-              have hx₁ : x = 1 := by omega
+            · have hx₁ : x = 1 := by omega
               simp [hx₁]
               unfold subst_fir
               simp [Y₂]
               rw [subst_X has_subst_fin3]
           rw [map_eq]
-          sorry
-          exact has_subst_fin3
       -- should be something same as aux₁
       have aux₂ : (fun ϕ ↦ ↑((truncTotalDegHom 2) ϕ) = φ ∧
         PowerSeries.subst ϕ f.toFun = subst f.toFun.toMvPowerSeries ϕ) G₂ := by
