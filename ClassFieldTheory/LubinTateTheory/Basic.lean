@@ -316,7 +316,7 @@ theorem constructive_lemma_two
     (f g : LubinTateF K π) :
     ∃! (ϕ : MvPowerSeries (Fin 2) 𝒪[K]), (truncTotalDegHom 2 ϕ)
     = MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) ∧
-    PowerSeries.subst ϕ f.toFun = subst g.toFun.toMvPowerSeries ϕ := by
+    PowerSeries.subst ϕ g.toFun = subst f.toFun.toMvPowerSeries ϕ := by
   let a := fun (x : Fin 2) => 1
 
   sorry
@@ -333,6 +333,18 @@ end Prop_2_11
 variable [DecidableEq σ] [Fintype σ]
 
 open LubinTateF
+
+/-- This is a special case from the constructive lemma, namely for `f, g` in the class
+  `LubinTateF` and forall element `a : 𝒪[K]` there is a PowerSeries `ϕ`, such that
+  truncation of `ϕ` of degree 2 is `a * X`, and `g ∘ ϕ = ϕ ∘ f`-/
+theorem constructive_lemma_poly
+    (f g : LubinTateF K π) (a : 𝒪[K]) :
+    ∃! (ϕ : PowerSeries 𝒪[K]), (PowerSeries.trunc 2 ϕ)
+    = Polynomial.C a * Polynomial.X  ∧
+    PowerSeries.subst ϕ g.toFun = PowerSeries.subst f.toFun ϕ := by
+  let a := fun (x : Fin 2) => 1
+
+  sorry
 
 lemma truncTotalDegHom_of_subst (f g : MvPowerSeries (Fin 2) R) :
   truncTotalDegHom 2 (subst (subst_fir g) f) =
@@ -685,7 +697,7 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
               rw [truncTotalDegHom_of_subst₂', htrunc]
               unfold ϕ₁
               simp [subst_add has_subst_sec_aux (X 0) (X 1), subst_X has_subst_sec_aux]
-              simp [subst_sec_aux, truncTotalDegHom, Y₀, Y₁, truncTotalDegTwo.X]
+              simp [subst_sec_aux, truncTotalDegHom, Y₁, truncTotalDegTwo.X]
             norm_cast at aux
           rw [eq_aux₂, eq_aux₃]
           ring_nf
@@ -754,9 +766,6 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
               rw [subst_X has_subst_sec_aux]
               exact has_subst_toMvPowerSeries hf_constant
             exact has_subst_toMvPowerSeries hf_constant
-
-
-
       obtain eq_aux₁ := h₂ _ aux₁
       obtain eq_aux₂ := h₂ _ aux₂
       unfold G₁ at eq_aux₁
@@ -805,10 +814,34 @@ def LubinTateFormalGroup (f : LubinTateF K π) :=
   Classical.choose (existence_of_LubinTateFormalGroup K π f)
 
 -- Proposition 2.14
+/-- Forall `f, g ∈ F_π` there is a unique power series`[a]_g,f` such that
+  `PowerSeries.trunc 2 [a]_g,f = a * X` and `g ∘ [a]_g,f = [a]_g,f ∘ f`, and this
+  `[a]_g,f` turn out to be a formal group homomorphim from `F_f` to `F_g`. -/
 theorem existence_of_scalar_mul (f g : LubinTateF K π) (a : 𝒪[K]) :
   ∃! (scalarHom : FormalGroupHom (LubinTateFormalGroup K π f) (LubinTateFormalGroup K π g)),
   PowerSeries.trunc 2 scalarHom.toFun = (Polynomial.C a) * (Polynomial.X) ∧
-  PowerSeries.subst scalarHom.toFun g.toFun  = PowerSeries.subst f.toFun scalarHom.toFun := by sorry
+  PowerSeries.subst scalarHom.toFun g.toFun  = PowerSeries.subst f.toFun scalarHom.toFun := by
+  -- constructive_lemma_poly
+  let scalarHom : FormalGroupHom (LubinTateFormalGroup K π f) (LubinTateFormalGroup K π g) :=
+    { toFun := choose (constructive_lemma_poly K π f g a)
+      zero_constantCoeff := by
+        let hom_a := choose (constructive_lemma_poly K π f g a)
+        have hom_a_eq : hom_a = choose (constructive_lemma_poly K π f g a) := rfl
+        obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma_poly K π f g a)
+        sorry
+      hom := sorry }
+  use scalarHom
+  have scalarHom_eq : scalarHom.toFun = choose (constructive_lemma_poly K π f g a) := rfl
+  obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma_poly K π f g a)
+  simp
+  constructor
+  exact h₁
+  intro a' ha₁' ha₂'
+  apply  FormalGroupHom.ext_iff.mpr
+  obtain h1 := h₂ a'.toFun ⟨ha₁',ha₂'⟩
+  rw [scalarHom_eq]
+  exact h1
+
 
 
 def ScalarHom (f g : LubinTateF K π) (a : 𝒪[K]) :=

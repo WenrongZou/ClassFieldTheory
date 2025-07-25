@@ -186,6 +186,7 @@ abbrev PowerSeries.toMvPowerSeries (f : PowerSeries R) (i : σ) : MvPowerSeries 
 /-- Let `G₁, G₂` be two formal group laws over `CommRing A`. A homomorphism (over `A`)
   `F (X, Y) → G (X, Y)` is a power series `α(X) = b₁ * X + b₂ * X ^ 2 + ⋯` with coefficients
   in `A` without constant term such that `α(F (X, Y)) = G (α (X), α (Y))`. -/
+@[ext]
 structure FormalGroupHom  (G₁ G₂ : FormalGroup R) where
   toFun : PowerSeries R
   zero_constantCoeff : PowerSeries.constantCoeff R toFun = 0
