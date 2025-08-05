@@ -422,8 +422,7 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
         simp at hc
         obtain ⟨hc₁, hc₂⟩ := hc
         simp [MvPolynomial.coeff_X', Ne.symm hc₁, Ne.symm hc₂] at hd
-      ·
-        simp
+      · simp
         intro h
         have neg_aux : ¬ Finsupp.single (1 : Fin 2) 1 = Finsupp.single 0 1 := by
           refine Finsupp.ne_iff.mpr ?_
@@ -452,7 +451,6 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
           rw [h₁]
           simp [ϕ₁]
     lin_coeff_X := by
-      -- maybe we could delete this two part according to milne remark 2.4
       obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma K π 2 phi_supp f f)
       let F_f := choose (constructive_lemma K π 2 phi_supp f f)
       have eq_aux : F_f = choose (constructive_lemma K π 2 phi_supp f f) := rfl
@@ -530,6 +528,7 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
       obtain G₀ := choose (constructive_lemma K π 3 phi_supp' f f)
       obtain ⟨h, hunique⟩ := choose_spec (constructive_lemma K π 2 phi_supp f f)
       obtain ⟨htrunc, hsubst⟩ := h
+      -- here prove `truncTotalDeg 2 G₁ = φ` and `f (G₁(X, Y, Z)) = G₁ (f(X), f(Y), f(Z))`.
       have aux₁ : (fun ϕ ↦ ↑((truncTotalDegHom  2) ϕ) = φ ∧
         PowerSeries.subst ϕ f.toFun = subst f.toFun.toMvPowerSeries ϕ) G₁ := by
         simp
@@ -659,7 +658,7 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF K π) :
               simp [Y₂]
               rw [subst_X (has_subst_toMvPowerSeries hf_constant)]
           rw [map_eq]
-      -- should be something same as aux₁
+      -- here prove  `truncTotalDegHom 2 G₂ = φ` and `f (G₂ (X, Y, Z)) = G₂ (f (X), f (Y), f (Z))`.
       have aux₂ : (fun ϕ ↦ ↑((truncTotalDegHom 2) ϕ) = φ ∧
         PowerSeries.subst ϕ f.toFun = subst f.toFun.toMvPowerSeries ϕ) G₂ := by
         simp
@@ -843,7 +842,7 @@ theorem existence_of_scalar_mul (f g : LubinTateF K π) (a : 𝒪[K]) :
   exact h1
 
 
-
+/-- -/
 def ScalarHom (f g : LubinTateF K π) (a : 𝒪[K]) :=
   Classical.choose (existence_of_scalar_mul K π f g a)
 
