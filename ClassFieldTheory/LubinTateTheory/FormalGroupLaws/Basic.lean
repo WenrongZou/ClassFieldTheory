@@ -52,10 +52,16 @@ abbrev Y₁ : MvPowerSeries (Fin 3) R := X (1 : Fin 3)
 
 abbrev Y₂ : MvPowerSeries (Fin 3) R := X (2 : Fin 3)
 
+
+/-- This is a map from `Fin 2` to `MvPowerSeries (Fin 3) R`,
+  `0 ↦ Y₀`, `1 ↦ Y₁` -/
 abbrev subst_fir_aux : Fin 2 → MvPowerSeries (Fin 3) R
   | ⟨0, _⟩ => Y₀
   | ⟨1, _⟩ => Y₁
 
+
+/-- This is a map from `Fin 2` to `MvPowerSeries (Fin 3) R`,
+  `0 ↦ Y₁`, `1 ↦ Y₂`-/
 abbrev subst_sec_aux : Fin 2 → MvPowerSeries (Fin 3) R
   | ⟨0, _⟩ => Y₁
   | ⟨1, _⟩ => Y₂
@@ -75,12 +81,14 @@ lemma has_subst_sec_aux: MvPowerSeries.HasSubst subst_sec_aux (S := R):= by
   · simp [show s = 1 by omega, subst_sec_aux]
 
 
--- (0 : Fin 2) ↦ F(X, Y), (1 : Fin 2) ↦ Z
+/-- this is a map from `Fin 2` to `MvPowerSeries (Fin 3) R`,
+  `(0 : Fin 2) ↦ F(X, Y), (1 : Fin 2) ↦ Z`. -/
 abbrev subst_fir : Fin 2 → MvPowerSeries (Fin 3) R
   | ⟨0, _⟩ => subst (subst_fir_aux) F
   | ⟨1, _⟩ => Y₂
 
--- (0 : Fin 2) ↦ X, (1 : Fin 2) ↦ F (Y, Z)
+/-- this is a map from `Fin 2` to `MvPowerSeries (Fin 3) R`,
+  (0 : Fin 2) ↦ X, (1 : Fin 2) ↦ F (Y, Z) -/
 abbrev subst_sec : Fin 2 → MvPowerSeries (Fin 3) R
   | ⟨0, _⟩ => Y₀
   | ⟨1, _⟩ => subst (subst_sec_aux) F
