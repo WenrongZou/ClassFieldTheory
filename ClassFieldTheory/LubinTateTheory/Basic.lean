@@ -48,7 +48,7 @@ instance : IsDiscreteValuationRing 𝒪[K] :=
 
 noncomputable section
 
-variable {σ : Type*} [DecidableEq σ] [Fintype σ] {R : Type*} [CommRing R]
+variable {σ : Type*} [DecidableEq σ] [Fintype σ]
 
 
 
@@ -100,8 +100,8 @@ theorem coeff_truncTotalDeg_of_totalDeg_lt (n : ℕ) (m : σ →₀ ℕ) (hm : F
   simp only [coeff_truncTotalDeg, hm, if_true]
 
 theorem truncTotalDegEq_powerSeries (n : ℕ) (ϕ : PowerSeries R) :
-    truncTotalDegEq n ϕ
-      = (MvPolynomial.pUnitAlgEquiv _).symm (Polynomial.monomial n (PowerSeries.coeff _ n ϕ)) := by
+  truncTotalDegEq n ϕ
+    = (MvPolynomial.pUnitAlgEquiv _).symm (Polynomial.monomial n (PowerSeries.coeff _ n ϕ)) := by
   ext w
   simp [coeff_truncTotalDegEq, MvPolynomial.coeff_X_pow]
   split_ifs with h₁ h₂ h₃
@@ -121,6 +121,13 @@ theorem truncTotalDeg_powerSeries (n : ℕ) (ϕ : PowerSeries R) :
     (MvPolynomial.pUnitAlgEquiv _).apply_symm_apply, PowerSeries.trunc,
     Finset.range_eq_Ico]
 
+lemma MvPowerSeries.truncTotalDeg_map_add (f g : MvPowerSeries σ R) (n : ℕ) :
+  truncTotalDeg n (f + g) = truncTotalDeg n f + truncTotalDeg n g := by
+  ext m
+  rw [MvPolynomial.coeff_add]
+  rw [coeff_truncTotalDeg, coeff_truncTotalDeg, coeff_truncTotalDeg]
+  split_ifs <;> simp
+
 /--
 `MvPowerSeries.truncTotalDeg` as a monoid homomorphism.
 -/
@@ -130,10 +137,7 @@ def MvPowerSeries.truncTotalDegHom (n : ℕ) : MvPowerSeries σ R →+ MvPolynom
     simp [truncTotalDeg, truncTotalDegEq]
   map_add' := by
     intro x y
-    ext m
-    rw [MvPolynomial.coeff_add]
-    rw [coeff_truncTotalDeg, coeff_truncTotalDeg, coeff_truncTotalDeg]
-    split_ifs <;> simp
+    apply truncTotalDeg_map_add
 
 theorem MvPowerSeries.truncTotalDegHom_apply (n : ℕ) (p : MvPowerSeries σ R) :
     p.truncTotalDegHom n = p.truncTotalDeg n :=
@@ -307,11 +311,25 @@ theorem constructive_lemma
         ∧ PowerSeries.subst ϕ f.toFun = subst g.toFun.toMvPowerSeries ϕ := by
   sorry
 
-
+/-- This is constructive lemma in two variable. More specific, given two `f, g ∈ F_π`,
+  then there exist unique `ϕ ∈ 𝒪[K]⟦X,Y⟧`, such that `ϕ ≡ X + Y mod (deg 2)` and
+  `g (ϕ (X, Y)) = ϕ (f(X), f(Y))`. -/
 theorem constructive_lemma_two
     (f g : LubinTateF π) :
     ∃! (ϕ : MvPowerSeries (Fin 2) 𝒪[K]), (truncTotalDegHom 2 ϕ)
     = MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) ∧
+    PowerSeries.subst ϕ g.toFun = subst f.toFun.toMvPowerSeries ϕ := by
+  let a := fun (x : Fin 2) => 1
+
+  sorry
+
+/-- This is constructive lemma in two variable. More specific, given two `f, g ∈ F_π`,
+  then there exist unique `ϕ ∈ 𝒪[K]⟦X,Y⟧`, such that `ϕ ≡ X + Y mod (deg 2)` and
+  `g (ϕ (X, Y)) = ϕ (f(X), f(Y))`. -/
+theorem constructive_lemma_two'
+    (f g : LubinTateF π) (a : 𝒪[K]):
+    ∃! (ϕ : MvPowerSeries (Fin 2) 𝒪[K]), (truncTotalDegHom 2 ϕ)
+    = MvPolynomial.C a * MvPolynomial.X (0 : Fin 2) + MvPolynomial.C a * MvPolynomial.X (1 : Fin 2) ∧
     PowerSeries.subst ϕ g.toFun = subst f.toFun.toMvPowerSeries ϕ := by
   let a := fun (x : Fin 2) => 1
 
@@ -342,6 +360,23 @@ theorem constructive_lemma_poly
 
   sorry
 
+/-- Given `g` a multi variate power series with two variables, `g (X, Y) ≡ g₂ (X, Y) mod (deg 2)`
+  as a multi variate power series with two variables, then `g (X, Y) ≡ g₂ (X, Y) mod (deg 2)`
+  as a multi variate power series with three variables, where `X, Y` is first two variables.-/
+lemma truncTotalDegHom_of_subst' (g : MvPowerSeries (Fin 2) R) (hg : constantCoeff _ _ g = 0) :
+  truncTotalDegHom 2 (subst subst_fir_aux g) =
+  truncTotalDegHom 2 (subst (subst_fir_aux (R := R)) (truncTotalDegHom 2 g) (R := R)) := by
+
+  sorry
+
+/-- Given `g` a multi variate power series with two variables, `g (X, Y) ≡ g₂ (X, Y) mod (deg 2)`
+  as a multi variate power series with two variables, then `g (Y, Z) ≡ g₂ (Y, Z) mod (deg 2)`
+  as a multi variate power series with three variables, where `Y, Z` is last two variables.-/
+lemma truncTotalDegHom_of_subst₂' (g : MvPowerSeries (Fin 2) R) (hg : constantCoeff _ _ g = 0):
+  truncTotalDegHom 2 (subst subst_sec_aux g) =
+  truncTotalDegHom 2 (subst (subst_sec_aux (R := R)) (truncTotalDegHom 2 g) (R := R) ):= by
+  sorry
+
 /-- Given `f, g` to be multi variate power series with two variable, let
   `f₂(X, Y) ≡ f(X,Y) mod (deg 2)`, and the constant coefficient of `g` is zero,
   then `f (g (X, Y), Z) ≡ f₂ (g (X, Y), Z) mod (deg 2)` -/
@@ -359,47 +394,435 @@ lemma truncTotalDegHom_of_subst₂ (f g : MvPowerSeries (Fin 2) R) (hg : constan
   sorry
 
 
-lemma truncTotalDegHom_of_subst' (g : MvPowerSeries (Fin 2) R) (hg : constantCoeff _ _ g = 0) :
-  truncTotalDegHom 2 (subst subst_fir_aux g) =
-  truncTotalDegHom 2 (subst (subst_fir_aux (R := R)) (truncTotalDegHom 2 g) (R := R) ):= by
-  sorry
-
-lemma truncTotalDegHom_of_subst₂' (g : MvPowerSeries (Fin 2) R) (hg : constantCoeff _ _ g = 0):
-  truncTotalDegHom 2 (subst subst_sec_aux g) =
-  truncTotalDegHom 2 (subst (subst_sec_aux (R := R)) (truncTotalDegHom 2 g) (R := R) ):= by
-  sorry
-
-
+/-- truncation of total degree `2` of multi variate power series `X (x : σ)` is `X (x : σ)`. -/
 theorem truncTotalDegTwo.X {x : σ}  :
   (truncTotalDeg 2 (X x)).toMvPowerSeries = X x (R := R) := by
-  sorry
+  ext d
+  simp [truncTotalDeg_eq, MvPolynomial.coeff_sum, coeff_truncTotalDegEq, coeff_X]
+  by_cases hd : d = Finsupp.single x 1
+  all_goals simp [hd]
 
 
-
+/-- Given a formal group law `F (X, Y)` over ring `R`, `F (X, Y)≅ X + Y (mod deg 2)` -/
 theorem FormalGroup.truncTotalDegTwo (F : FormalGroup R) :
   ((truncTotalDegHom 2) F.toFun) = MvPolynomial.X 0 + MvPolynomial.X 1 := by
-  sorry
+  ext d
+  simp [truncTotalDegHom, truncTotalDeg_eq, MvPolynomial.coeff_sum, coeff_truncTotalDegEq]
+  by_cases hd : d = Finsupp.single 0 1
+  · simp [hd, F.lin_coeff_X]
+  · by_cases hd₁ : d = Finsupp.single 1 1
+    · simp [hd₁, F.lin_coeff_Y]
+    · simp [MvPolynomial.coeff_X', if_neg (Ne.symm hd), if_neg (Ne.symm hd₁)]
+      by_cases hd₂ : d = 0
+      · simp [hd₂, F.zero_constantCoeff]
+      · intro h
+        have heq : d 0 + d 1 = d 1 + d 0 := by ring_nf
+        interval_cases (d 0 + d 1)
+        · have d₀eq : d 0 = 0 := by linarith
+          have d₁eq : d 1 = 0 := by linarith
+          have deq_zero : d = 0 := by
+            ext x
+            fin_cases x
+            all_goals simp [d₀eq, d₁eq]
+          contradiction
+        · have d₁eq : (d 0 = 1 ∧ d 1 = 0) ∨ (d 0 = 0 ∧ d 1 = 1) := by
+            omega
+          obtain deq | deq := d₁eq
+          · have hc : d = Finsupp.single 0 1 := by
+              ext x
+              fin_cases x
+              all_goals simp [deq]
+            contradiction
+          · have hc : d = Finsupp.single 1 1 := by
+              ext x
+              fin_cases x
+              all_goals simp [deq]
+            contradiction
+
+theorem truncTotalDeg_smul (f : MvPowerSeries σ R) {a : R} {n : ℕ} : truncTotalDeg n (a • f)
+  = a • truncTotalDeg n f := by sorry
+
+
 
 /-- For any Multi-variable PowerSeries `f`, assume `d ≥ 1` , then constant coefficient of  truncation of
   total degree `d` of `f` is equal to `f` -/
-theorem constant_of_truncTotalDeg_ge_one (f : MvPowerSeries σ R) {d : ℕ} (hd : d ≥ 1):
-  MvPolynomial.constantCoeff (truncTotalDegHom d f) = constantCoeff _ R f := by
-  sorry
-
-omit [DecidableEq σ]
-lemma has_subst_toMvPowerSeries {f : PowerSeries R} (hf : PowerSeries.constantCoeff R f = 0) :
-  HasSubst (f.toMvPowerSeries (σ := σ)) (S := R) := by
-  refine hasSubst_of_constantCoeff_zero ?_
-  intro x
-  rw [PowerSeries.toMvPowerSeries, ←coeff_zero_eq_constantCoeff, PowerSeries.coeff_subst (PowerSeries.HasSubst.X x)]
+theorem constantCoeff_of_truncTotalDeg_ge_one (f : MvPowerSeries σ R) {d : ℕ} (hd : d ≥ 1):
+  constantCoeff _ R f = MvPolynomial.constantCoeff (truncTotalDegHom d f) := by
+  simp [truncTotalDegHom, truncTotalDeg_eq, MvPolynomial.constantCoeff]
+  simp_rw [coeff_truncTotalDegEq]
+  rw [show (constantCoeff σ R) f = (coeff R 0) f by simp]
+  apply Eq.symm
+  rw [Finset.sum_eq_single 0]
   simp
-  apply finsum_eq_zero_of_forall_eq_zero
-  intro d
-  by_cases hd₀ : d = 0
-  · simp [hd₀, hf]
-  · simp [zero_pow hd₀]
+  · intro x hx₁ hx₂
+    simp
+    intro hc
+    by_contra
+    exact hx₂ (Eq.symm hc)
+  · intro hx
+    simp
+    have hc : 0 ∈ Finset.range d := by
+      simp
+      linarith
+    exfalso
+    contradiction
 
--- def LubinTateFormalGroup (f : LubinTateF π) :
+/-- Given a multi variate power series `f` with two variables, assume `f` satisfies the condition
+  of Lubin Tate Formal Group condition with respect to `π`. -/
+def LubinTateFormalGroupAux (f : LubinTateF π) :  FormalGroup (𝒪[K]) :=
+  let ϕ₁ : MvPolynomial (Fin 2) (𝒪[K]) :=
+    MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2)
+  have phi_supp : ∀ i ∈ ϕ₁.support, Finset.univ.sum ⇑i = 1 := by
+    intro i
+    have supp_eq : ϕ₁.support =
+      {(Finsupp.single 0 1), (Finsupp.single 1 1)} := by
+      refine Finset.ext_iff.mpr ?_
+      intro d
+      constructor
+      · intro hd
+        simp [ϕ₁] at hd ⊢
+        by_contra hc
+        simp at hc
+        obtain ⟨hc₁, hc₂⟩ := hc
+        simp [MvPolynomial.coeff_X', Ne.symm hc₁, Ne.symm hc₂] at hd
+      · simp
+        intro h
+        have neg_aux : ¬ Finsupp.single (1 : Fin 2) 1 = Finsupp.single 0 1 := by
+          refine Finsupp.ne_iff.mpr ?_
+          use 1
+          simp
+        obtain h1 | h2 := h
+        · simp [ϕ₁, MvPolynomial.coeff_X', h1, neg_aux]
+        · simp [ϕ₁, MvPolynomial.coeff_X', h2, Ne.symm neg_aux]
+    simp [supp_eq]
+    intro h
+    obtain h1 | h2 := h
+    simp [h1]
+    simp [h2]
+  have phi_eq : ϕ₁ = MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) := rfl
+  let F_f := choose (constructive_lemma π 2 phi_supp f f)
+  have eq_aux : F_f = choose (constructive_lemma π 2 phi_supp f f) := rfl
+  {
+  toFun := choose (constructive_lemma π 2 phi_supp f f)
+  zero_constantCoeff := by
+    obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 2 phi_supp  f f)
+    obtain ⟨h₁, h_hom⟩ := h₁
+    calc
+      _ = (constantCoeff (Fin 2) ↥𝒪[K]) (↑((truncTotalDegHom 2)
+        (choose (constructive_lemma π 2 phi_supp f f)))) := by
+        unfold truncTotalDegHom
+        simp [←coeff_zero_eq_constantCoeff, coeff_truncTotalDeg]
+      _ = 0 := by
+        rw [h₁]
+        simp [ϕ₁]
+  lin_coeff_X := by
+    obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 2 phi_supp f f)
+    obtain ⟨htrunc, hsubst⟩ := h₁
+    rw [←eq_aux]  at htrunc ⊢
+    have eq_aux₁ : (coeff (↥𝒪[K]) (Finsupp.single 0 1)) F_f
+      = (coeff (↥𝒪[K]) (Finsupp.single 0 1)) ϕ₁.toMvPowerSeries := by
+      rw [←htrunc]
+      simp [truncTotalDegHom, coeff_truncTotalDeg]
+    rw [eq_aux₁, phi_eq]
+    simp
+    rw [coeff_X, if_neg]
+    refine Finsupp.ne_iff.mpr ?_
+    use 0
+    simp
+  lin_coeff_Y := by
+    obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 2 phi_supp f f)
+    obtain ⟨htrunc, hsubst⟩ := h₁
+    rw [←eq_aux]  at htrunc ⊢
+    have eq_aux₁ : (coeff (↥𝒪[K]) (Finsupp.single 1 1)) F_f
+      = (coeff (↥𝒪[K]) (Finsupp.single 1 1)) ϕ₁.toMvPowerSeries := by
+      simp [←htrunc, truncTotalDegHom, coeff_truncTotalDeg]
+    rw [eq_aux₁, phi_eq]
+    simp
+    rw [coeff_X, if_neg]
+    refine Finsupp.ne_iff.mpr ?_
+    use 0
+    simp
+  assoc := by
+    let hf := choose_spec (constructive_lemma π 2 phi_supp f f)
+    obtain ⟨⟨hf₁, hf₂⟩, hf₃⟩ := hf
+    rw [←eq_aux] at hf₂
+    let G₁ := subst (subst_fir F_f) F_f
+    let G₂ := subst (subst_sec F_f) F_f
+    have G_eq₁ : G₁ = subst (subst_fir F_f) F_f := rfl
+    have G_eq₂ : G₂ = subst (subst_sec F_f) F_f := rfl
+    -- φ = X 0 + X 1 + X 2
+    let φ : MvPolynomial (Fin 3) 𝒪[K] := MvPolynomial.X (0 : Fin 3) +
+      MvPolynomial.X 1 + MvPolynomial.X 2
+    have phi_eq' : φ = MvPolynomial.X (0 : Fin 3) +
+      MvPolynomial.X 1 + MvPolynomial.X 2 := by rfl
+    have h_Ff : constantCoeff _ _ F_f = 0 := by
+      rw [constantCoeff_of_truncTotalDeg_ge_one _ (show 2 ≥ 1 by norm_num),
+        hf₁, phi_eq]
+      simp
+    have hf_constant : PowerSeries.constantCoeff _ f.toFun = 0 := constantCoeff_LubinTateF _ _
+    have phi_supp' : ∀ i ∈ φ.support, Finset.univ.sum ⇑i = 1 := by
+      -- same as above
+      intro i
+      have supp_eq : φ.support =
+      {(Finsupp.single 0 1), (Finsupp.single 1 1), (Finsupp.single 2 1)} := by
+        refine Finset.ext_iff.mpr ?_
+        intro d
+        constructor
+        · intro hd
+          simp [φ] at hd ⊢
+          by_contra hc
+          simp at hc
+          obtain ⟨hc₁, hc₂, hc₃⟩ := hc
+          simp [MvPolynomial.coeff_X', Ne.symm hc₁, Ne.symm hc₂, Ne.symm hc₃] at hd
+        · simp
+          intro h
+          obtain h | h | h := h
+          all_goals simp [h, phi_eq']
+      simp [supp_eq]
+      intro hi
+      obtain h | h | h := hi
+      all_goals simp [h]
+    have constantF_f : constantCoeff _ _  F_f = 0  := by
+      rw [←eq_aux] at hf₁
+      rw [constantCoeff_of_truncTotalDeg_ge_one _ (show 2 ≥ 1 by linarith), hf₁, phi_eq]
+      simp
+    obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 3 phi_supp' f f)
+    obtain G₀ := choose (constructive_lemma π 3 phi_supp' f f)
+    obtain ⟨h, hunique⟩ := choose_spec (constructive_lemma π 2 phi_supp f f)
+    obtain ⟨htrunc, hsubst⟩ := h
+    -- here prove `truncTotalDeg 2 G₁ = φ` and `f (G₁(X, Y, Z)) = G₁ (f(X), f(Y), f(Z))`.
+    have aux₁ : ↑((truncTotalDegHom  2) G₁) = φ ∧
+      PowerSeries.subst G₁ f.toFun = subst f.toFun.toMvPowerSeries G₁ := by
+      constructor
+      · rw [truncTotalDegHom_of_subst _ _ h_Ff, htrunc]
+        unfold ϕ₁
+        have eq_aux : (subst (subst_fir F_f)
+          ((MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) :
+            MvPolynomial (Fin 2) 𝒪[K]) : MvPowerSeries (Fin 2) 𝒪[K]) (R := 𝒪[K]) )
+          = (subst (subst_fir_aux) F_f) + X (2 : Fin 3) := by
+          simp
+          have has_subst : (constantCoeff _ (𝒪[K]) F_f) = 0 := by
+            rw [←eq_aux] at hf₁
+            simp [constantCoeff_of_truncTotalDeg_ge_one F_f (by linarith) (d := 2), hf₁, phi_eq]
+          rw [subst_add (has_subst_fir _ has_subst), subst_X (has_subst_fir _ has_subst),
+            subst_X (has_subst_fir _ has_subst)]
+        rw [eq_aux]
+        simp
+        unfold φ
+        have eq_aux₂ : ((truncTotalDegHom 2)
+          (X (2 : Fin 3)))  = MvPolynomial.X (2 : Fin 3) (R := 𝒪[K]) := by
+          simp [truncTotalDegHom]
+          refine MvPolynomial.ext_iff.mpr ?_
+          intro n
+          simp [coeff_truncTotalDeg, MvPolynomial.coeff_X']
+          by_cases h1 : Finsupp.single 2 1 = n
+          · have haux : Finset.univ.sum ⇑n < 2 := by
+              simp [←h1]
+            simp [←h1, coeff_X]
+          · simp [h1, coeff_X, Ne.symm h1]
+        have eq_aux₃ : ((truncTotalDegHom 2) (subst subst_fir_aux F_f))
+          = MvPolynomial.X (0 : Fin 3) + MvPolynomial.X (1 : Fin 3) (R := 𝒪[K]) := by
+          have aux : ((truncTotalDegHom 2) (subst subst_fir_aux F_f)).toMvPowerSeries
+          = (MvPolynomial.X (0 : Fin 3) + MvPolynomial.X (1 : Fin 3) (R := 𝒪[K])).toMvPowerSeries := by
+            rw [truncTotalDegHom_of_subst' _ h_Ff, htrunc]
+            unfold ϕ₁
+            simp [subst_add has_subst_fir_aux (X 0) (X 1), subst_X has_subst_fir_aux]
+            simp [subst_fir_aux, truncTotalDegHom, Y₀, Y₁, truncTotalDegTwo.X]
+          norm_cast at aux
+        rw [eq_aux₂, eq_aux₃]
+      ·
+        rw [G_eq₁]
+        have eq_aux₁ : PowerSeries.subst (subst (subst_fir F_f) F_f) f.toFun
+          = subst (subst_fir F_f) (PowerSeries.subst F_f f.toFun) := by
+          simp [PowerSeries.subst]
+          rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.of_constantCoeff_zero constantF_f))
+            (has_subst_fir F_f constantF_f)]
+        rw [eq_aux₁, hf₂]
+        let map_aux : Fin 2 → MvPowerSeries (Fin 3) (𝒪[K])
+        | ⟨0, _⟩ => PowerSeries.subst (subst subst_fir_aux F_f) f.toFun
+        | ⟨1, _⟩ => f.toFun.toMvPowerSeries 2
+        have eq_aux₂ : subst (subst_fir F_f) (subst f.toFun.toMvPowerSeries F_f)
+          = subst map_aux F_f := by
+          rw [subst_comp_subst_apply]
+          apply subst_congr
+          funext s
+          by_cases hs₀ : s = 0
+          · unfold subst_fir
+            simp [map_aux, hs₀, PowerSeries.toMvPowerSeries, PowerSeries.subst]
+            rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 0))
+              (has_subst_fir F_f constantF_f)]
+            apply subst_congr
+            funext t
+            rw [subst_X (has_subst_fir F_f constantF_f)]
+          · have hs₁ : s = 1 := by omega
+            unfold subst_fir
+            simp [map_aux, hs₁, PowerSeries.toMvPowerSeries, PowerSeries.subst]
+            rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 1))
+              (has_subst_fir F_f constantF_f)]
+            apply subst_congr
+            funext t
+            rw [subst_X (has_subst_fir F_f constantF_f)]
+          exact (has_subst_toMvPowerSeries hf_constant)
+          exact (has_subst_fir F_f constantF_f)
+        rw [eq_aux₂]
+        unfold map_aux
+        let map_aux' : Fin 2 → MvPowerSeries (Fin 3) (𝒪[K])
+        | ⟨0, _⟩ => f.toFun.toMvPowerSeries 0
+        | ⟨1, _⟩ => f.toFun.toMvPowerSeries 1
+        have eq_aux₃ : PowerSeries.subst (subst subst_fir_aux F_f) f.toFun
+          = subst map_aux' F_f := by
+          have eq_aux : subst subst_fir_aux (PowerSeries.subst F_f f.toFun)
+            = subst subst_fir_aux (subst f.toFun.toMvPowerSeries F_f) (S := 𝒪[K]) := by
+            rw [hf₂]
+          rw [PowerSeries.subst] at eq_aux
+          rw [PowerSeries.subst, ←subst_comp_subst_apply (hasSubst_of_constantCoeff_zero fun s ↦ constantF_f)
+            has_subst_fir_aux , eq_aux, subst_comp_subst_apply (has_subst_toMvPowerSeries hf_constant) has_subst_fir_aux]
+          apply subst_congr
+          simp [map_aux']
+          unfold subst_fir_aux PowerSeries.toMvPowerSeries
+          funext s
+          by_cases hs₀ : s = 0
+          · simp [hs₀]
+            unfold PowerSeries.subst
+            rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 0)) has_subst_fir_aux]
+            apply subst_congr
+            funext t
+            rw [subst_X has_subst_fir_aux]
+          · have hs₁ : s = 1 := by omega
+            simp [hs₁]
+            rw [PowerSeries.subst, subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 1)) has_subst_fir_aux]
+            apply subst_congr
+            funext t
+            rw [subst_X has_subst_fir_aux ]
+        rw [eq_aux₃, subst_comp_subst_apply (has_subst_fir F_f constantF_f) (has_subst_toMvPowerSeries hf_constant)]
+        apply subst_congr
+        funext x t
+        fin_cases x
+        · -- the cases `x = 0`
+          unfold map_aux' subst_fir subst_fir_aux
+          simp
+          rw [subst_comp_subst_apply has_subst_fir_aux (has_subst_toMvPowerSeries hf_constant)]
+          congr
+          funext x' t'
+          fin_cases x'
+          all_goals rw [subst_X (has_subst_toMvPowerSeries hf_constant)]
+        · -- the case `x = 1`
+          unfold subst_fir
+          simp [Y₂]
+          rw [subst_X (has_subst_toMvPowerSeries hf_constant)]
+
+    -- here prove  `truncTotalDegHom 2 G₂ = φ` and `f (G₂ (X, Y, Z)) = G₂ (f (X), f (Y), f (Z))`.
+    have aux₂ : ↑((truncTotalDegHom 2) G₂) = φ ∧
+      PowerSeries.subst G₂ f.toFun = subst f.toFun.toMvPowerSeries G₂ := by
+
+      constructor
+      ·
+        rw [truncTotalDegHom_of_subst₂ _ _ h_Ff, htrunc, phi_eq]
+        have eq_aux : (subst (subst_sec F_f)
+          ((MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) :
+            MvPolynomial (Fin 2) 𝒪[K]) : MvPowerSeries (Fin 2) 𝒪[K]) (R := 𝒪[K]) )
+          = X (0 : Fin 3) + (subst (subst_sec_aux) F_f)  := by
+          simp
+          have has_subst : (constantCoeff _ (𝒪[K]) F_f) = 0 := by
+            rw [←eq_aux] at hf₁
+            simp [constantCoeff_of_truncTotalDeg_ge_one F_f (by linarith) (d := 2), hf₁, phi_eq]
+          rw [subst_add (has_subst_sec _ has_subst), subst_X (has_subst_sec _ has_subst),
+            subst_X (has_subst_sec _ has_subst)]
+        rw [eq_aux]
+        simp
+        unfold φ
+        have eq_aux₂ : ((truncTotalDegHom 2)
+          (X (0 : Fin 3)))  = MvPolynomial.X (0 : Fin 3) (R := 𝒪[K]) := by
+          simp [truncTotalDegHom]
+          refine MvPolynomial.ext_iff.mpr ?_
+          intro n
+          simp [coeff_truncTotalDeg, MvPolynomial.coeff_X']
+          by_cases h1 : Finsupp.single 0 1 = n
+          · have haux : Finset.univ.sum ⇑n < 2 := by
+              simp [←h1]
+            simp [←h1, coeff_X]
+          · simp [h1, coeff_X, Ne.symm h1]
+        have eq_aux₃ : ((truncTotalDegHom 2) (subst subst_sec_aux F_f))
+          = MvPolynomial.X (1 : Fin 3) + MvPolynomial.X (2 : Fin 3) (R := 𝒪[K]) := by
+          have aux : ((truncTotalDegHom 2) (subst subst_sec_aux F_f)).toMvPowerSeries
+          = (MvPolynomial.X (1 : Fin 3) + MvPolynomial.X (2 : Fin 3) (R := 𝒪[K])).toMvPowerSeries := by
+            rw [truncTotalDegHom_of_subst₂' _ h_Ff, htrunc]
+            unfold ϕ₁
+            simp [subst_add has_subst_sec_aux (X 0) (X 1), subst_X has_subst_sec_aux]
+            simp [subst_sec_aux, truncTotalDegHom, Y₁, truncTotalDegTwo.X]
+          norm_cast at aux
+        rw [eq_aux₂, eq_aux₃]
+        ring_nf
+      ·
+        rw [G_eq₂]
+        have eq_aux₁ : PowerSeries.subst (subst (subst_sec F_f) F_f) f.toFun
+          = subst (subst_sec F_f) (PowerSeries.subst F_f f.toFun) := by
+          simp [PowerSeries.subst]
+          rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.of_constantCoeff_zero constantF_f))
+            (has_subst_sec F_f constantF_f)]
+        rw [eq_aux₁, hf₂, subst_comp_subst_apply (has_subst_sec F_f constantF_f)
+          (has_subst_toMvPowerSeries hf_constant), subst_comp_subst_apply
+          (has_subst_toMvPowerSeries hf_constant) (has_subst_sec F_f constantF_f)]
+        apply subst_congr
+        funext x
+        fin_cases x
+        · -- the case `x = 0`
+          simp [subst_sec, Y₀]
+          rw [subst_X]
+          rw [PowerSeries.toMvPowerSeries, PowerSeries.toMvPowerSeries,
+            PowerSeries.subst, subst_comp_subst_apply , PowerSeries.subst]
+          apply subst_congr
+          funext t
+          unfold subst_sec
+          rw [subst_X]
+          exact has_subst_sec F_f constantF_f
+          refine hasSubst_of_constantCoeff_zero ?_
+          simp
+          exact has_subst_sec F_f constantF_f
+          exact has_subst_toMvPowerSeries hf_constant
+        · -- the case `x = 1`
+          simp [subst_sec]
+          unfold subst_sec PowerSeries.toMvPowerSeries PowerSeries.subst
+          rw [subst_comp_subst_apply (hasSubst_of_constantCoeff_zero
+            (fun s ↦ constantCoeff_X 1)) (has_subst_sec F_f constantF_f),
+            subst_X (has_subst_sec F_f constantF_f)]
+          have eq_aux : subst subst_sec_aux (PowerSeries.subst F_f f.toFun) =
+            subst subst_sec_aux (subst f.toFun.toMvPowerSeries F_f) (S := 𝒪[K])  := by
+            rw [hf₂]
+          rw [PowerSeries.subst, subst_comp_subst_apply
+            (hasSubst_of_constantCoeff_zero fun s ↦ constantF_f)
+            has_subst_sec_aux ] at eq_aux
+          rw [eq_aux]
+          rw [subst_comp_subst_apply (has_subst_toMvPowerSeries hf_constant)
+            has_subst_sec_aux, subst_comp_subst_apply has_subst_sec_aux]
+          apply subst_congr
+          funext t
+          fin_cases t
+          · -- the case `t = 0`
+            unfold subst_sec_aux
+            simp
+            rw [subst_X, PowerSeries.toMvPowerSeries, PowerSeries.subst,
+              subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 0))
+              has_subst_sec_aux]
+            apply subst_congr
+            rw [subst_X has_subst_sec_aux]
+            exact has_subst_toMvPowerSeries hf_constant
+          · -- the cases `t = 1`
+            unfold subst_sec_aux
+            simp
+            rw [subst_X, PowerSeries.toMvPowerSeries, PowerSeries.subst,
+              subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 1))
+              has_subst_sec_aux]
+            apply subst_congr
+            rw [subst_X has_subst_sec_aux]
+            exact has_subst_toMvPowerSeries hf_constant
+          exact has_subst_toMvPowerSeries hf_constant
+    obtain eq_aux₁ := h₂ _ aux₁
+    obtain eq_aux₂ := h₂ _ aux₂
+    unfold G₁ at eq_aux₁
+    unfold G₂ at eq_aux₂
+    rw [eq_aux₁, ←eq_aux₂]
+}
 
 
 
@@ -437,342 +860,8 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF π) :
     obtain h1 | h2 := h
     simp [h1]
     simp [h2]
-  have phi_eq :ϕ₁ = MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) := rfl
-  let F_f : FormalGroup (𝒪[K]) := {
-    toFun := choose (constructive_lemma π 2 phi_supp f f)
-    zero_constantCoeff := by
-      obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 2 phi_supp  f f)
-      obtain ⟨h₁, h_hom⟩ := h₁
-      calc
-        _ = (constantCoeff (Fin 2) ↥𝒪[K]) (↑((truncTotalDegHom 2)
-          (choose (constructive_lemma π 2 phi_supp f f)))) := by
-          unfold truncTotalDegHom
-          simp [←coeff_zero_eq_constantCoeff, coeff_truncTotalDeg]
-        _ = 0 := by
-          rw [h₁]
-          simp [ϕ₁]
-    lin_coeff_X := by
-      obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 2 phi_supp f f)
-      let F_f := choose (constructive_lemma π 2 phi_supp f f)
-      have eq_aux : F_f = choose (constructive_lemma π 2 phi_supp f f) := rfl
-      obtain ⟨htrunc, hsubst⟩ := h₁
-      rw [←eq_aux]  at htrunc ⊢
-      have eq_aux₁ : (coeff (↥𝒪[K]) (Finsupp.single 0 1)) F_f
-        = (coeff (↥𝒪[K]) (Finsupp.single 0 1)) ϕ₁.toMvPowerSeries := by
-        rw [←htrunc]
-        simp [truncTotalDegHom, coeff_truncTotalDeg]
-      rw [eq_aux₁, phi_eq]
-      simp
-      rw [coeff_X, if_neg]
-      refine Finsupp.ne_iff.mpr ?_
-      use 0
-      simp
-    lin_coeff_Y := by
-      obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 2 phi_supp f f)
-      let F_f := choose (constructive_lemma π 2 phi_supp f f)
-      have eq_aux : F_f = choose (constructive_lemma π 2 phi_supp f f) := rfl
-      obtain ⟨htrunc, hsubst⟩ := h₁
-      rw [←eq_aux]  at htrunc ⊢
-      have eq_aux₁ : (coeff (↥𝒪[K]) (Finsupp.single 1 1)) F_f
-        = (coeff (↥𝒪[K]) (Finsupp.single 1 1)) ϕ₁.toMvPowerSeries := by
-        rw [←htrunc]
-        simp [truncTotalDegHom, coeff_truncTotalDeg]
-      rw [eq_aux₁, phi_eq]
-      simp
-      rw [coeff_X, if_neg]
-      refine Finsupp.ne_iff.mpr ?_
-      use 0
-      simp
-    assoc := by
-      let F_f := choose (constructive_lemma π 2 phi_supp f f)
-      have F_feq : F_f = choose (constructive_lemma π 2 phi_supp f f) := rfl
-      let hf := choose_spec (constructive_lemma π 2 phi_supp f f)
-      obtain ⟨⟨hf₁, hf₂⟩, hf₃⟩ := hf
-      rw [←F_feq] at hf₂
-      let G₁ := subst (subst_fir F_f) F_f
-      let G₂ := subst (subst_sec F_f) F_f
-      have G_eq₁ : G₁ = subst (subst_fir F_f) F_f := rfl
-      have G_eq₂ : G₂ = subst (subst_sec F_f) F_f := rfl
-      -- φ = X 0 + X 1 + X 2
-      let φ : MvPolynomial (Fin 3) 𝒪[K] := MvPolynomial.X (0 : Fin 3) +
-        MvPolynomial.X 1 + MvPolynomial.X 2
-      have phi_eq' : φ = MvPolynomial.X (0 : Fin 3) +
-        MvPolynomial.X 1 + MvPolynomial.X 2 := by rfl
-      have h_Ff : constantCoeff _ _ F_f = 0 := by sorry
-      have hf_constant : PowerSeries.constantCoeff _ f.toFun = 0 := constantCoeff_LubinTateF _ _
-      have phi_supp' : ∀ i ∈ φ.support, Finset.univ.sum ⇑i = 1 := by
-        -- same as above
-        intro i
-        have supp_eq : φ.support =
-        {(Finsupp.single 0 1), (Finsupp.single 1 1), (Finsupp.single 2 1)} := by
-          refine Finset.ext_iff.mpr ?_
-          intro d
-          constructor
-          · intro hd
-            simp [φ] at hd ⊢
-            by_contra hc
-            simp at hc
-            obtain ⟨hc₁, hc₂, hc₃⟩ := hc
-            simp [MvPolynomial.coeff_X', Ne.symm hc₁, Ne.symm hc₂, Ne.symm hc₃] at hd
-          · simp
-            intro h
-            obtain h | h | h := h
-            all_goals simp [h, phi_eq']
-        simp [supp_eq]
-        intro hi
-        obtain h | h | h := hi
-        all_goals simp [h]
-      have constantF_f : constantCoeff _ _  F_f = 0  := by
-        rw [←F_feq] at hf₁
-        rw [←constant_of_truncTotalDeg_ge_one _ (show 2 ≥ 1 by linarith), hf₁, phi_eq]
-        simp
-      obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 3 phi_supp' f f)
-      obtain G₀ := choose (constructive_lemma π 3 phi_supp' f f)
-      obtain ⟨h, hunique⟩ := choose_spec (constructive_lemma π 2 phi_supp f f)
-      obtain ⟨htrunc, hsubst⟩ := h
-      -- here prove `truncTotalDeg 2 G₁ = φ` and `f (G₁(X, Y, Z)) = G₁ (f(X), f(Y), f(Z))`.
-      have aux₁ : (fun ϕ ↦ ↑((truncTotalDegHom  2) ϕ) = φ ∧
-        PowerSeries.subst ϕ f.toFun = subst f.toFun.toMvPowerSeries ϕ) G₁ := by
-        simp
-        constructor
-        · rw [truncTotalDegHom_of_subst _ _ h_Ff, htrunc]
-          unfold ϕ₁
-          have eq_aux : (subst (subst_fir F_f)
-            ((MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) :
-              MvPolynomial (Fin 2) 𝒪[K]) : MvPowerSeries (Fin 2) 𝒪[K]) (R := 𝒪[K]) )
-            = (subst (subst_fir_aux) F_f) + X (2 : Fin 3) := by
-            simp
-            have has_subst : (constantCoeff _ (𝒪[K]) F_f) = 0 := by
-              rw [←F_feq] at hf₁
-              simp [←constant_of_truncTotalDeg_ge_one F_f (by linarith) (d := 2), hf₁, phi_eq]
-            rw [subst_add (has_subst_fir _ has_subst), subst_X (has_subst_fir _ has_subst),
-              subst_X (has_subst_fir _ has_subst)]
-          rw [eq_aux]
-          simp
-          unfold φ
-          have eq_aux₂ : ((truncTotalDegHom 2)
-            (X (2 : Fin 3)))  = MvPolynomial.X (2 : Fin 3) (R := 𝒪[K]) := by
-            simp [truncTotalDegHom]
-            refine MvPolynomial.ext_iff.mpr ?_
-            intro n
-            simp [coeff_truncTotalDeg, MvPolynomial.coeff_X']
-            by_cases h1 : Finsupp.single 2 1 = n
-            · have haux : Finset.univ.sum ⇑n < 2 := by
-                simp [←h1]
-              simp [←h1, coeff_X]
-            · simp [h1, coeff_X, Ne.symm h1]
-          have eq_aux₃ : ((truncTotalDegHom 2) (subst subst_fir_aux F_f))
-            = MvPolynomial.X (0 : Fin 3) + MvPolynomial.X (1 : Fin 3) (R := 𝒪[K]) := by
-            have aux : ((truncTotalDegHom 2) (subst subst_fir_aux F_f)).toMvPowerSeries
-            = (MvPolynomial.X (0 : Fin 3) + MvPolynomial.X (1 : Fin 3) (R := 𝒪[K])).toMvPowerSeries := by
-              rw [truncTotalDegHom_of_subst' _ h_Ff, htrunc]
-              unfold ϕ₁
-              simp [subst_add has_subst_fir_aux (X 0) (X 1), subst_X has_subst_fir_aux]
-              simp [subst_fir_aux, truncTotalDegHom, Y₀, Y₁, truncTotalDegTwo.X]
-            norm_cast at aux
-          rw [eq_aux₂, eq_aux₃]
-        ·
-          rw [G_eq₁]
-          have eq_aux₁ : PowerSeries.subst (subst (subst_fir F_f) F_f) f.toFun
-            = subst (subst_fir F_f) (PowerSeries.subst F_f f.toFun) := by
-            simp [PowerSeries.subst]
-            rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.of_constantCoeff_zero constantF_f))
-              (has_subst_fir F_f constantF_f)]
-          rw [eq_aux₁, hf₂]
-          let map_aux : Fin 2 → MvPowerSeries (Fin 3) (𝒪[K])
-          | ⟨0, _⟩ => PowerSeries.subst (subst subst_fir_aux F_f) f.toFun
-          | ⟨1, _⟩ => f.toFun.toMvPowerSeries 2
-          have eq_aux₂ : subst (subst_fir F_f) (subst f.toFun.toMvPowerSeries F_f)
-            = subst map_aux F_f := by
-            rw [subst_comp_subst_apply]
-            apply subst_congr
-            funext s
-            by_cases hs₀ : s = 0
-            · unfold subst_fir
-              simp [map_aux, hs₀, PowerSeries.toMvPowerSeries, PowerSeries.subst]
-              rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 0))
-                (has_subst_fir F_f constantF_f)]
-              apply subst_congr
-              funext t
-              rw [subst_X (has_subst_fir F_f constantF_f)]
-            · have hs₁ : s = 1 := by omega
-              unfold subst_fir
-              simp [map_aux, hs₁, PowerSeries.toMvPowerSeries, PowerSeries.subst]
-              rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 1))
-                (has_subst_fir F_f constantF_f)]
-              apply subst_congr
-              funext t
-              rw [subst_X (has_subst_fir F_f constantF_f)]
-            exact (has_subst_toMvPowerSeries hf_constant)
-            exact (has_subst_fir F_f constantF_f)
-          rw [eq_aux₂]
-          unfold map_aux
-          let map_aux' : Fin 2 → MvPowerSeries (Fin 3) (𝒪[K])
-          | ⟨0, _⟩ => f.toFun.toMvPowerSeries 0
-          | ⟨1, _⟩ => f.toFun.toMvPowerSeries 1
-          have eq_aux₃ : PowerSeries.subst (subst subst_fir_aux F_f) f.toFun
-            = subst map_aux' F_f := by
-            have eq_aux : subst subst_fir_aux (PowerSeries.subst F_f f.toFun)
-              = subst subst_fir_aux (subst f.toFun.toMvPowerSeries F_f) (S := 𝒪[K]) := by
-              rw [hf₂]
-            rw [PowerSeries.subst] at eq_aux
-            rw [PowerSeries.subst, ←subst_comp_subst_apply (hasSubst_of_constantCoeff_zero fun s ↦ constantF_f)
-              has_subst_fir_aux , eq_aux, subst_comp_subst_apply (has_subst_toMvPowerSeries hf_constant) has_subst_fir_aux]
-            apply subst_congr
-            simp [map_aux']
-            unfold subst_fir_aux PowerSeries.toMvPowerSeries
-            funext s
-            by_cases hs₀ : s = 0
-            · simp [hs₀]
-              unfold PowerSeries.subst
-              rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 0)) has_subst_fir_aux]
-              apply subst_congr
-              funext t
-              rw [subst_X has_subst_fir_aux]
-            · have hs₁ : s = 1 := by omega
-              simp [hs₁]
-              rw [PowerSeries.subst, subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 1)) has_subst_fir_aux]
-              apply subst_congr
-              funext t
-              rw [subst_X has_subst_fir_aux ]
-          rw [eq_aux₃, subst_comp_subst_apply (has_subst_fir F_f constantF_f) (has_subst_toMvPowerSeries hf_constant)]
-          have map_eq : (fun x ↦ match x with
-            | ⟨0, isLt⟩ => subst map_aux' F_f
-            | ⟨1, isLt⟩ => f.toFun.toMvPowerSeries 2) = (fun s ↦ subst f.toFun.toMvPowerSeries (subst_fir F_f s)) := by
-            funext x t
-            by_cases hx₀ : x = 0
-            · simp [hx₀]
-              unfold map_aux' subst_fir subst_fir_aux
-              simp
-              rw [subst_comp_subst_apply has_subst_fir_aux (has_subst_toMvPowerSeries hf_constant)]
-              congr
-              funext x' t'
-              by_cases hx₀' : x' = 0
-              · simp [hx₀']
-                rw [subst_X (has_subst_toMvPowerSeries hf_constant)]
-              · have hx'eq : x' = 1 := by
-                  omega
-                simp [hx'eq]
-                rw [subst_X (has_subst_toMvPowerSeries hf_constant)]
-            · have hx₁ : x = 1 := by omega
-              simp [hx₁]
-              unfold subst_fir
-              simp [Y₂]
-              rw [subst_X (has_subst_toMvPowerSeries hf_constant)]
-          rw [map_eq]
-      -- here prove  `truncTotalDegHom 2 G₂ = φ` and `f (G₂ (X, Y, Z)) = G₂ (f (X), f (Y), f (Z))`.
-      have aux₂ : (fun ϕ ↦ ↑((truncTotalDegHom 2) ϕ) = φ ∧
-        PowerSeries.subst ϕ f.toFun = subst f.toFun.toMvPowerSeries ϕ) G₂ := by
-        simp
-        constructor
-        ·
-          rw [truncTotalDegHom_of_subst₂ _ _ h_Ff, htrunc, phi_eq]
-          have eq_aux : (subst (subst_sec F_f)
-            ((MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) :
-              MvPolynomial (Fin 2) 𝒪[K]) : MvPowerSeries (Fin 2) 𝒪[K]) (R := 𝒪[K]) )
-            = X (0 : Fin 3) + (subst (subst_sec_aux) F_f)  := by
-            simp
-            have has_subst : (constantCoeff _ (𝒪[K]) F_f) = 0 := by
-              rw [←F_feq] at hf₁
-              simp [←constant_of_truncTotalDeg_ge_one F_f (by linarith) (d := 2), hf₁, phi_eq]
-            rw [subst_add (has_subst_sec _ has_subst), subst_X (has_subst_sec _ has_subst),
-              subst_X (has_subst_sec _ has_subst)]
-          rw [eq_aux]
-          simp
-          unfold φ
-          have eq_aux₂ : ((truncTotalDegHom 2)
-            (X (0 : Fin 3)))  = MvPolynomial.X (0 : Fin 3) (R := 𝒪[K]) := by
-            simp [truncTotalDegHom]
-            refine MvPolynomial.ext_iff.mpr ?_
-            intro n
-            simp [coeff_truncTotalDeg, MvPolynomial.coeff_X']
-            by_cases h1 : Finsupp.single 0 1 = n
-            · have haux : Finset.univ.sum ⇑n < 2 := by
-                simp [←h1]
-              simp [←h1, coeff_X]
-            · simp [h1, coeff_X, Ne.symm h1]
-          have eq_aux₃ : ((truncTotalDegHom 2) (subst subst_sec_aux F_f))
-            = MvPolynomial.X (1 : Fin 3) + MvPolynomial.X (2 : Fin 3) (R := 𝒪[K]) := by
-            have aux : ((truncTotalDegHom 2) (subst subst_sec_aux F_f)).toMvPowerSeries
-            = (MvPolynomial.X (1 : Fin 3) + MvPolynomial.X (2 : Fin 3) (R := 𝒪[K])).toMvPowerSeries := by
-              rw [truncTotalDegHom_of_subst₂' _ h_Ff, htrunc]
-              unfold ϕ₁
-              simp [subst_add has_subst_sec_aux (X 0) (X 1), subst_X has_subst_sec_aux]
-              simp [subst_sec_aux, truncTotalDegHom, Y₁, truncTotalDegTwo.X]
-            norm_cast at aux
-          rw [eq_aux₂, eq_aux₃]
-          ring_nf
-        ·
-          rw [G_eq₂]
-          have eq_aux₁ : PowerSeries.subst (subst (subst_sec F_f) F_f) f.toFun
-            = subst (subst_sec F_f) (PowerSeries.subst F_f f.toFun) := by
-            simp [PowerSeries.subst]
-            rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.of_constantCoeff_zero constantF_f))
-              (has_subst_sec F_f constantF_f)]
-          rw [eq_aux₁, hf₂, subst_comp_subst_apply (has_subst_sec F_f constantF_f)
-            (has_subst_toMvPowerSeries hf_constant), subst_comp_subst_apply
-            (has_subst_toMvPowerSeries hf_constant) (has_subst_sec F_f constantF_f)]
-          apply subst_congr
-          funext x
-          by_cases hx₀ : x = 0
-          ·
-            simp [hx₀, subst_sec, Y₀]
-            rw [subst_X]
-            rw [PowerSeries.toMvPowerSeries, PowerSeries.toMvPowerSeries,
-              PowerSeries.subst, subst_comp_subst_apply , PowerSeries.subst]
-            apply subst_congr
-            funext t
-            unfold subst_sec
-            rw [subst_X]
-            exact has_subst_sec F_f constantF_f
-            refine hasSubst_of_constantCoeff_zero ?_
-            simp
-            exact has_subst_sec F_f constantF_f
-            exact has_subst_toMvPowerSeries hf_constant
-          ·
-            have hx₁ : x = 1 := by omega
-            simp [hx₁, subst_sec]
-            unfold subst_sec PowerSeries.toMvPowerSeries PowerSeries.subst
-            rw [subst_comp_subst_apply (hasSubst_of_constantCoeff_zero
-              (fun s ↦ constantCoeff_X 1)) (has_subst_sec F_f constantF_f),
-              subst_X (has_subst_sec F_f constantF_f)]
-            have eq_aux : subst subst_sec_aux (PowerSeries.subst F_f f.toFun) =
-              subst subst_sec_aux (subst f.toFun.toMvPowerSeries F_f) (S := 𝒪[K])  := by
-              rw [hf₂]
-            rw [PowerSeries.subst, subst_comp_subst_apply
-              (hasSubst_of_constantCoeff_zero fun s ↦ constantF_f)
-              has_subst_sec_aux ] at eq_aux
-            rw [eq_aux]
-            rw [subst_comp_subst_apply (has_subst_toMvPowerSeries hf_constant)
-              has_subst_sec_aux, subst_comp_subst_apply has_subst_sec_aux]
-            apply subst_congr
-            funext t
-            by_cases ht₀ : t = 0
-            · unfold subst_sec_aux
-              simp [ht₀]
-              rw [subst_X, PowerSeries.toMvPowerSeries, PowerSeries.subst,
-                subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 0))
-                has_subst_sec_aux]
-              apply subst_congr
-              rw [subst_X has_subst_sec_aux]
-              exact has_subst_toMvPowerSeries hf_constant
-            ·
-              have ht₁ : t = 1 := by omega
-              unfold subst_sec_aux
-              simp [ht₁]
-              rw [subst_X, PowerSeries.toMvPowerSeries, PowerSeries.subst,
-                subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 1))
-                has_subst_sec_aux]
-              apply subst_congr
-              rw [subst_X has_subst_sec_aux]
-              exact has_subst_toMvPowerSeries hf_constant
-            exact has_subst_toMvPowerSeries hf_constant
-      obtain eq_aux₁ := h₂ _ aux₁
-      obtain eq_aux₂ := h₂ _ aux₂
-      unfold G₁ at eq_aux₁
-      unfold G₂ at eq_aux₂
-      rw [eq_aux₁, ←eq_aux₂]
-  }
+  have phi_eq : ϕ₁ = MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) := rfl
+  let F_f : FormalGroup (𝒪[K]) := LubinTateFormalGroupAux π f
   let Hom_f : FormalGroupHom F_f F_f := {
     toFun := f.toFun
     zero_constantCoeff := by
@@ -789,6 +878,7 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF π) :
     hom := by
       obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 2 phi_supp f f)
       obtain ⟨h₁, h_hom⟩ := h₁
+      unfold F_f LubinTateFormalGroupAux
       rw [h_hom]
   }
   refine existsUnique_of_exists_of_unique ?_ ?_
@@ -814,6 +904,35 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF π) :
 def LubinTateFormalGroup (f : LubinTateF π) :=
   Classical.choose (existence_of_LubinTateFormalGroup π f)
 
+/-- Given a `f ∈ LubinTateF π`, and `F_f` be the unique Lubin Tate Formal Group associate to
+  `f`, then the constant coefficient of `F_f` is zero. -/
+theorem LubinTateFormalGroup.constantCoeff_zero (f : LubinTateF π) :
+  constantCoeff _ _ (LubinTateFormalGroup π f).toFun = 0 := by sorry
+
+
+theorem LubinTateFormalGroup.endomorphism (f : LubinTateF π) :
+  PowerSeries.subst (LubinTateFormalGroup π f).toFun f.toFun =
+  subst f.toFun.toMvPowerSeries (LubinTateFormalGroup π f).toFun := by sorry
+
+
+/-- Given a `f ∈ LubinTateF π`, and `F_f` be the unique Lubin Tate Formal Group associate to
+  `f`, then the truncation of total degree `2` of `F_f ∈ 𝒪[K]⟦X, Y⟧` is `X + Y`. -/
+theorem LubinTateFormalGroup.truncTotalDegTwo (f : LubinTateF π) :
+  truncTotalDeg 2 (LubinTateFormalGroup π f).toFun = MvPolynomial.X 0 + MvPolynomial.X 1 := by
+  sorry
+
+theorem truncTotalDeg.PowerSeries_subst_n (f : MvPowerSeries σ R) (g : PowerSeries R) (n : ℕ)
+  (hf : constantCoeff _ _ f = 0) : truncTotalDeg n (PowerSeries.subst f g) =
+  truncTotalDeg n (PowerSeries.subst f (PowerSeries.trunc n g).toPowerSeries) := by sorry
+
+theorem truncTotalDeg.MvPowerSeries_subst_two
+  (f : σ → MvPowerSeries σ  R) (g : MvPowerSeries σ R)
+  (hf : ∀ (x : σ), constantCoeff _ _ (f x) = 0) : truncTotalDeg 2 (subst f g) =
+  truncTotalDeg 2 (subst f (truncTotalDeg 2 g).toMvPowerSeries) := by sorry
+
+
+open LubinTateFormalGroup
+
 -- Proposition 2.14
 /-- Forall `f, g ∈ F_π` there is a unique power series`[a]_g,f` such that
   `PowerSeries.trunc 2 [a]_g,f = a * X` and `g ∘ [a]_g,f = [a]_g,f ∘ f`, and this
@@ -822,33 +941,206 @@ theorem existence_of_scalar_mul (f g : LubinTateF π) (a : 𝒪[K]) :
   ∃! (scalarHom : FormalGroupHom (LubinTateFormalGroup π f) (LubinTateFormalGroup π g)),
   PowerSeries.trunc 2 scalarHom.toFun = (Polynomial.C a) * (Polynomial.X) ∧
   PowerSeries.subst scalarHom.toFun g.toFun  = PowerSeries.subst f.toFun scalarHom.toFun := by
-  -- constructive_lemma_poly
+  /- Existence of homomorphism of formal group induced by `a ∈ 𝒪[K]`.-/
   let scalarHom : FormalGroupHom (LubinTateFormalGroup π f) (LubinTateFormalGroup π g) :=
+    let hom_a := choose (constructive_lemma_poly π f g a)
+    have hom_a_eq : hom_a = choose (constructive_lemma_poly π f g a) := rfl
+
     { toFun := choose (constructive_lemma_poly π f g a)
       zero_constantCoeff := by
-        let hom_a := choose (constructive_lemma_poly π f g a)
-        have hom_a_eq : hom_a = choose (constructive_lemma_poly π f g a) := rfl
         obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma_poly π f g a)
-        sorry
-      hom := sorry }
+        rw [←hom_a_eq] at h₁ ⊢
+        obtain ⟨htrunc, hsubst⟩ := h₁
+        have aux : (PowerSeries.constantCoeff ↥𝒪[K]) hom_a
+          = Polynomial.constantCoeff (PowerSeries.trunc 2 hom_a) := by
+          rw [Polynomial.constantCoeff_apply, ←PowerSeries.coeff_zero_eq_constantCoeff,
+            PowerSeries.coeff_trunc, if_pos (by norm_num)]
+        simp [aux, Polynomial.constantCoeff_apply, htrunc]
+      hom := by
+        rw [←hom_a_eq]
+        obtain ⟨ϕ, h₁, h₂⟩ := constructive_lemma_two' π f g a
+        obtain ⟨htrunc, hsubst⟩ := h₁
+        simp at h₂
+        obtain ⟨hom_a_spec₁, hom_a_spec₂⟩ := choose_spec (constructive_lemma_poly π f g a)
+        rw [←hom_a_eq] at hom_a_spec₁ hom_a_spec₂
+        obtain ⟨hom_a_trunc, hom_a_subst⟩ := hom_a_spec₁
+        have eq_aux₁ : MvPowerSeries.truncTotalDeg 2 (PowerSeries.subst
+          (LubinTateFormalGroup π f).toFun hom_a)
+          = MvPolynomial.C a * MvPolynomial.X 0 + MvPolynomial.C a * MvPolynomial.X 1 := by
+          rw [truncTotalDeg.PowerSeries_subst_n _ _ 2 (constantCoeff_zero π f), hom_a_trunc]
+          simp
+          rw [←(PowerSeries.smul_eq_C_mul PowerSeries.X a), PowerSeries.subst_smul
+            (PowerSeries.HasSubst.of_constantCoeff_zero (constantCoeff_zero π f)),
+            PowerSeries.subst_X (PowerSeries.HasSubst.of_constantCoeff_zero
+            (constantCoeff_zero π f)), truncTotalDeg_smul, truncTotalDegTwo,
+            MvPolynomial.smul_eq_C_mul _ a]
+          ring
+        have hom_a_constantCoeff : PowerSeries.constantCoeff _ hom_a = 0 := by
+          rw [←PowerSeries.coeff_zero_eq_constantCoeff]
+          calc
+            _ = Polynomial.coeff (PowerSeries.trunc 2 hom_a) 0 := by
+              rw [PowerSeries.coeff_trunc, if_pos (by norm_num)]
+            _ = 0 := by
+              rw [hom_a_trunc]
+              simp
+        have eq_aux₂ : truncTotalDeg 2 (subst
+          hom_a.toMvPowerSeries (LubinTateFormalGroup π g).toFun)
+          = MvPolynomial.C a * MvPolynomial.X 0 + MvPolynomial.C a * MvPolynomial.X 1 := by
+          have aux : ∀ (x : Fin 2), constantCoeff _ _ (hom_a.toMvPowerSeries x) = 0 := by
+            intro x
+            fin_cases x
+            · rw [PowerSeries.toMvPowerSeries, ←coeff_zero_eq_constantCoeff, PowerSeries.coeff_subst
+                (PowerSeries.HasSubst.X _)]
+              simp
+              apply finsum_eq_zero_of_forall_eq_zero
+              intro d
+              by_cases hd₀ : d = 0
+              · simp [hd₀, hom_a_constantCoeff]
+              · simp [zero_pow hd₀]
+            · rw [PowerSeries.toMvPowerSeries, ←coeff_zero_eq_constantCoeff, PowerSeries.coeff_subst
+                (PowerSeries.HasSubst.X _)]
+              simp
+              apply finsum_eq_zero_of_forall_eq_zero
+              intro d
+              by_cases hd₀ : d = 0
+              · simp [hd₀, hom_a_constantCoeff]
+              · simp [zero_pow hd₀]
+          rw [truncTotalDeg.MvPowerSeries_subst_two _ _ aux, LubinTateFormalGroup.truncTotalDegTwo]
+          simp
+          rw [subst_add (hasSubst_of_constantCoeff_zero aux),
+            subst_X (hasSubst_of_constantCoeff_zero aux),
+            subst_X (hasSubst_of_constantCoeff_zero aux),
+            PowerSeries.toMvPowerSeries, PowerSeries.toMvPowerSeries,
+            truncTotalDeg_map_add, truncTotalDeg.PowerSeries_subst_n _ _ 2 (constantCoeff_X 0),
+            hom_a_trunc]
+          simp
+          rw [←(PowerSeries.smul_eq_C_mul PowerSeries.X a), PowerSeries.subst_smul
+            (PowerSeries.HasSubst.X 0), PowerSeries.subst_X (PowerSeries.HasSubst.X 0),
+            truncTotalDeg.PowerSeries_subst_n _ _ 2 (constantCoeff_X 1), hom_a_trunc]
+          simp
+          rw [←(PowerSeries.smul_eq_C_mul PowerSeries.X a), PowerSeries.subst_smul
+            (PowerSeries.HasSubst.X 1), PowerSeries.subst_X (PowerSeries.HasSubst.X 1)]
+          ext m
+          rw [MvPolynomial.coeff_add]
+          rw [coeff_truncTotalDeg, coeff_truncTotalDeg]
+          by_cases ha : Finset.univ.sum ⇑m < 2
+          · rw [if_pos ha, if_pos ha]
+            simp [MvPolynomial.coeff_X']
+            by_cases hb : Finsupp.single 0 1 = m
+            · have neq : Finsupp.single 1 1 ≠ m := by
+                rw [←hb]
+                by_contra hc
+                have aux' : Finsupp.single (1 : Fin 2) 1 0 = Finsupp.single (0 : Fin 2) 1 0 := by
+                  rw [hc]
+                simp at aux'
+              rw [if_neg neq, if_pos hb, coeff_X, coeff_X, if_neg (Ne.symm neq),
+                if_pos (Eq.symm hb)]
+              simp
+            · by_cases hb' : Finsupp.single 1 1 = m
+              rw [if_neg hb, if_pos hb', coeff_X, coeff_X, if_neg (Ne.symm hb),
+                if_pos (Eq.symm hb')]
+              simp
+              rw [if_neg hb', if_neg hb, coeff_X, coeff_X, if_neg (Ne.symm hb),
+                if_neg (Ne.symm hb')]
+              simp
+          · rw [if_neg ha, if_neg ha]
+            simp [MvPolynomial.coeff_X']
+            have neq₁ : Finsupp.single (0 : Fin 2) 1 ≠ m := by
+              simp at ha
+              by_contra hc
+              have add_aux : m 0 + m 1 = 1 := by
+                simp [←hc]
+              linarith
+            have neq₂ : Finsupp.single (1 : Fin 2) 1 ≠ m := by
+              simp at ha
+              by_contra hc
+              have add_aux : m 0 + m 1 = 1 := by
+                simp [←hc]
+              linarith
+            simp [if_neg neq₁, if_neg neq₂]
+        /- `g ∘ hom_a (F_f (X, Y)) = hom_a (F_f (f(X), f(Y)))`. -/
+        have eq_aux₃ : PowerSeries.subst (PowerSeries.subst
+          (LubinTateFormalGroup π f).toFun hom_a) g.toFun = subst f.toFun.toMvPowerSeries
+          (PowerSeries.subst (LubinTateFormalGroup π f).toFun hom_a) := by
+          obtain has_subst₃:=  PowerSeries.HasSubst.const (PowerSeries.HasSubst.of_constantCoeff_zero
+            (LubinTateFormalGroup.constantCoeff_zero π f))
+          obtain has_subst₄ := has_subst_toMvPowerSeries (constantCoeff_LubinTateF π f) (σ := Fin 2)
+          obtain has_subst₁ := PowerSeries.HasSubst.of_constantCoeff_zero' (constantCoeff_LubinTateF π f)
+          obtain has_subst₂ := PowerSeries.HasSubst.of_constantCoeff_zero (LubinTateFormalGroup.constantCoeff_zero π f)
+          rw [←PowerSeries.subst_comp_subst_apply (PowerSeries.HasSubst.of_constantCoeff_zero'
+            hom_a_constantCoeff) (PowerSeries.HasSubst.of_constantCoeff_zero
+            (LubinTateFormalGroup.constantCoeff_zero π f)), hom_a_subst,
+            PowerSeries.subst_comp_subst_apply has_subst₁ has_subst₂, PowerSeries.subst,
+            PowerSeries.subst, PowerSeries.subst,subst_comp_subst_apply has_subst₃ has_subst₄]
+          apply subst_congr
+          funext s
+          rw [←LubinTateFormalGroup.endomorphism, PowerSeries.subst]
+        /- `g ∘ F_g (hom_a (X), hom_a (Y)) = F_g (hom_a (f (X)), hom_a (f (Y)))`. -/
+        have eq_aux₄ : PowerSeries.subst (subst hom_a.toMvPowerSeries
+          (LubinTateFormalGroup π g).toFun) g.toFun = subst f.toFun.toMvPowerSeries
+          (subst hom_a.toMvPowerSeries (LubinTateFormalGroup π g).toFun) := by
+          obtain has_subst₁ := PowerSeries.HasSubst.const (PowerSeries.HasSubst.of_constantCoeff_zero (LubinTateFormalGroup.constantCoeff_zero π g))
+          obtain has_subst₂ := has_subst_toMvPowerSeries hom_a_constantCoeff (σ := Fin 2)
+          rw [PowerSeries.subst, ←subst_comp_subst_apply has_subst₁ has_subst₂, ←PowerSeries.subst,
+          LubinTateFormalGroup.endomorphism, subst_comp_subst_apply
+          (has_subst_toMvPowerSeries (constantCoeff_LubinTateF π g))
+          has_subst₂, subst_comp_subst_apply
+          has_subst₂ (has_subst_toMvPowerSeries (constantCoeff_LubinTateF π f))]
+          apply subst_congr
+          funext s
+          have subst_eq : subst hom_a.toMvPowerSeries (g.toFun.toMvPowerSeries s)
+            = PowerSeries.toMvPowerSeries (PowerSeries.subst hom_a g.toFun) s := by
+            simp [PowerSeries.toMvPowerSeries, PowerSeries.subst]
+            rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X s))
+            has_subst₂, subst_comp_subst_apply
+            (hasSubst_of_constantCoeff_zero fun s ↦ hom_a_constantCoeff)
+            (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X s))]
+            apply subst_congr
+            funext t
+            rw [subst_X has_subst₂]
+            rfl
+          have subst_eq' : subst f.toFun.toMvPowerSeries (hom_a.toMvPowerSeries s)
+            = PowerSeries.toMvPowerSeries (PowerSeries.subst f.toFun hom_a) s := by
+            simp [PowerSeries.toMvPowerSeries, PowerSeries.subst]
+            rw [subst_comp_subst_apply (PowerSeries.HasSubst.const
+            (PowerSeries.HasSubst.of_constantCoeff_zero' (constantCoeff_LubinTateF π f)))
+            (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X s)), subst_comp_subst_apply
+            (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X s))
+            (has_subst_toMvPowerSeries (constantCoeff_LubinTateF π f))]
+            apply subst_congr
+            funext t
+            rw [subst_X (has_subst_toMvPowerSeries (constantCoeff_LubinTateF π f))]
+            rfl
+          rw [subst_eq, hom_a_subst, ←subst_eq']
+        obtain eq₁ := h₂ _ eq_aux₁ eq_aux₃
+        obtain eq₂ := h₂ _ eq_aux₂ eq_aux₄
+        rw [eq₁, ←eq₂]
+        }
   use scalarHom
+  /- Uniqueness of this homomorphism of formal group induced by `a ∈ 𝒪[K]`. -/
   have scalarHom_eq : scalarHom.toFun = choose (constructive_lemma_poly π f g a) := rfl
   obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma_poly π f g a)
   simp
   constructor
-  exact h₁
-  intro a' ha₁' ha₂'
-  apply  FormalGroupHom.ext_iff.mpr
-  obtain h1 := h₂ a'.toFun ⟨ha₁',ha₂'⟩
-  rw [scalarHom_eq]
-  exact h1
+  · exact h₁
+  · intro a' ha₁' ha₂'
+    apply  FormalGroupHom.ext_iff.mpr
+    obtain h1 := h₂ a'.toFun ⟨ha₁',ha₂'⟩
+    rw [scalarHom_eq]
+    exact h1
 
 
 /-- -/
 def ScalarHom (f g : LubinTateF π) (a : 𝒪[K]) :=
   choose (existence_of_scalar_mul π f g a)
 
-notation "[" a "]" K π f g => choose (existence_of_scalar_mul K π f g a)
+-- variable (a : 𝒪[K]) (f g : LubinTateF π)
+
+-- notation "[" a "]" π f g => choose (existence_of_scalar_mul π f g a)
+
+-- #check [ a ] π f g
+
+
 
 -- Proposition 2.15.1
 theorem additive_of_ScalarHom (f g : LubinTateF π) (a b : 𝒪[K]) :

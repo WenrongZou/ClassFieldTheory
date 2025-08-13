@@ -167,6 +167,20 @@ multivariate power series p(X_i) ∈ R⟦X_1, ..., X_n⟧.
 abbrev PowerSeries.toMvPowerSeries (f : PowerSeries R) (i : σ) : MvPowerSeries σ R :=
   PowerSeries.subst (MvPowerSeries.X i) f
 
+lemma has_subst_toMvPowerSeries [Finite σ] {f : PowerSeries R}
+  (hf : PowerSeries.constantCoeff R f = 0) :
+  HasSubst (f.toMvPowerSeries (σ := σ)) (S := R) := by
+  refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
+  intro x
+  rw [PowerSeries.toMvPowerSeries, ←coeff_zero_eq_constantCoeff, PowerSeries.coeff_subst
+    (PowerSeries.HasSubst.X x)]
+  simp
+  apply finsum_eq_zero_of_forall_eq_zero
+  intro d
+  by_cases hd₀ : d = 0
+  · simp [hd₀, hf]
+  · simp [zero_pow hd₀]
+
 
 variable (R) in
 /-- A structure for a 1-dimensional formal group law over `R`-/
