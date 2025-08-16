@@ -668,6 +668,7 @@ open PowerSeries
 
 /-- The homomorphism `α(X) : F (X, Y) → G (X, Y)` is an isomorphism if there exists a
   homomorphism `β(X) : G (X, Y) → F (X, Y)` such that `α ∘ β = id,  β ∘ α = id`. -/
+@[ext]
 structure FormalGroupIso (G₁ G₂ : FormalGroup R) where
   toHom : FormalGroupHom G₁ G₂
   invHom : FormalGroupHom G₂ G₁
