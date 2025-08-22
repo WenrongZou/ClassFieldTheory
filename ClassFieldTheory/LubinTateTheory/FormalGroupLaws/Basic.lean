@@ -677,5 +677,10 @@ structure FormalGroupIso (G₁ G₂ : FormalGroup R) where
 
 /-- An isomorphism `α(X) : F (X, Y) → G (X, Y)`, `α(X) = a₁ * X + a₂ * X ^ 2 + ⋯`
   is called strict isomorphism if `a₁ = 1`.-/
+@[ext]
 structure FormalGroupStrictIso (G₁ G₂ : FormalGroup R) extends FormalGroupIso G₁ G₂ where
   one_coeff_one : coeff R 1 toHom.toFun = 1
+
+theorem FormalGroupStrictIso.ext_iff' (G₁ G₂ : FormalGroup R) (α β : FormalGroupStrictIso G₁ G₂) :
+  α = β ↔  α.toHom = β.toHom := by
+  sorry

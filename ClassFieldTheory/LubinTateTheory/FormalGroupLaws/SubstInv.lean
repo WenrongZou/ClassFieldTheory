@@ -339,5 +339,24 @@ theorem exist_subst_inv
   refine (subst_comp_eq_id_iff g' (HasSubst.of_constantCoeff_zero' hg₂')
     (HasSubst.of_constantCoeff_zero' hg₂)).mpr hg₁'
 
+theorem exist_unique_subst_inv
+  (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0):
+  ∃! (g : PowerSeries R), subst f ∘ subst g = id ∧ subst g ∘ subst f = id
+  ∧ constantCoeff R g = 0 := by
+  refine existsUnique_of_exists_of_unique ?_ ?_
+  · obtain ⟨g, h₁, h₂, h₃⟩ := exist_subst_inv _ h hc
+    exact ⟨g, h₁, h₂, h₃⟩
+  · intro g₁ g₂ hg₁ hg₂
+    obtain ⟨hg₁, hg₁', hg₁''⟩ := hg₁
+    have eq_aux : subst g₁ ∘ subst f ∘ subst g₂ = id ∘ subst g₂ (R := R) := by
+      rw [←hg₁', Function.comp_assoc]
+    rw [hg₂.1] at eq_aux
+    simp at eq_aux
+    have eq_aux' : subst g₁ PowerSeries.X (R := R) = subst g₂ PowerSeries.X (R := R) := by
+      rw [eq_aux]
+    rw [subst_X (HasSubst.of_constantCoeff_zero' hg₂.2.2), subst_X
+      (HasSubst.of_constantCoeff_zero' hg₁'')] at eq_aux'
+    exact eq_aux'
+
 end
 end PowerSeries
